@@ -233,24 +233,31 @@ clock = pygame.time.Clock()
 def change_x(A, B, now):
     x1, y1 = A
     x2, y2 = B
-    _, now_y = now
-    try:
-        result = x1 + (now_y - y1) * (x1 - x2) / now_y
-        return result
-    except ZeroDivisionError:
-        # A と B が水平線上にある場合のフォールバック
-        return (x1 + x2) / 2
+    now_X, now_y = now
+
+    result = x1 + ((x1 - x2) / (y1 - y2)) * (now_y-y1) + x1
+    return result
+    #try:
+    #     result = x1 + (now_y - y1) * (x1 - x2) / now_y
+    #     return result
+    # except ZeroDivisionError:
+    #     # A と B が水平線上にある場合のフォールバック
+    #     return (x1 + x2) / 2
 
 def change_y(A, B, now):
     x1, y1 = A
     x2, y2 = B
-    now_x, _ = now
-    try:
-        result = y1 + now_x * ((y1 - y2) * (x1 - x2)) - ((y1 - y2) / (x1 , x2) * x1)
-        return result
-    except ZeroDivisionError:
-        # A と B が垂直線上にある場合のフォールバック
-        return (y1 + y2) / 2
+    now_x, now_y = now
+
+    result = (y1 - y2) / now_y
+    return result
+
+    # try:
+    #     result = y1 + now_x * ((y1 - y2) * (x1 - x2)) - ((y1 - y2) / (x1 , x2) * x1)
+    #     return result
+    # except ZeroDivisionError:
+    #     # A と B が垂直線上にある場合のフォールバック
+    #     return (y1 + y2) / 2
 
 #ここ4x4だよ！画像4x4にしたんでしょ？って言われるかもね。　　　　　　↓
 aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
@@ -266,6 +273,11 @@ right_bottom = (3,3)
 left_bottom = (4,4)
 player = (1,1)
 
+ret, frame = cap.read()
+while ret != True:
+    print("カメラつながってない")
+
+
 # 4. ゲームループ
 running = True
 while running:
@@ -273,6 +285,7 @@ while running:
     ret, frame = cap.read()
     if ret:
         markers, ids, rejected = aruco_detector.detectMarkers(frame)
+        #print(markers)
 
         for i in range(len(markers)):
             ID = ids[i]
@@ -283,27 +296,30 @@ while running:
             #ave[x,y]
             ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
 
+            print(ID)
+
             if ID == 1:
                 left_top = ave
-                print(left_top)
+                #print(left_top)
 
             if ID == 2:
                 right_top = ave
-                print(right_top)
+                #print(right_top)
 
             if ID == 3:
                 right_bottom = ave
-                print(right_bottom)
+                #print(right_bottom)
 
             if ID == 4:
                 left_bottom = ave
-                print(left_bottom)
+                #print(left_bottom)
 
             if ID == 5:
                 player = ave
-                print(player)
+                #print(player)
 
     # 5. イベント処理
+    
     for event in pygame.event.get():
 
         #まうすの動きを感知
@@ -323,17 +339,32 @@ while running:
     count += 1
     #print(f"count  {count}")
 
+
     #マウスの位置を人がいる位置に置き換えるプログラム（日本語はもともとおかしいわ！
+    if count % 100 == 0:
+        print(f"left_top:{left_top}")
+
+        print(f"right_top:{right_top}")
+
+        print(f"right_bottom:{right_bottom}")
+
+        print(f"left_bottom:{left_bottom}")
+
+        print(f"player:{player}")
+    
     try:
-        mouse_x = ((screen.get_width()) / int(change_x(left_bottom,left_top,player) - change_x(right_bottom,right_top,player) / (player[0])))
-        mouse_x = numpy.abs(mouse_x)
+        mouse_x = ((screen.get_width()) / int(change_x(left_top,left_bottom,player) - change_x(right_top,right_bottom,player) / (player[0])))
+        mouse_x = int(numpy.abs(mouse_x))
     except ZeroDivisionError:
         mouse_x = 1
     try:
         mouse_y = (screen.get_height() / left_bottom[1] - left_top[1] / player[1])
-        mouse_y = numpy.abs(mouse_y)
+        mouse_y = int(numpy.abs(mouse_y))
     except ZeroDivisionError:
         mouse_y = 1
+
+    #print(mouse_x)
+    #print(mouse_y)
 
 
 
@@ -346,7 +377,7 @@ while running:
 
 
     #実験用のマウス追従円
-    new_cursor = cursor(player)
+    new_cursor = cursor((mouse_x,mouse_y))
     cursor_list.append(new_cursor)
     for i in cursor_list:
         i.draw()
@@ -387,7 +418,7 @@ while running:
         i.update()
         i.draw()
 
-    print(len(comment_q))
+    #print(len(comment_q))
     for i in comment_q:
         i.update()
         i.draw()
@@ -397,7 +428,7 @@ while running:
         del_target = "nan"
 
     if del_target_comment != "nan":
-        print()
+        #print()
         del comment_q[del_target_comment]
         del_target_comment = "nan"
     
