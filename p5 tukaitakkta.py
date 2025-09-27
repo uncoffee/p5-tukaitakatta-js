@@ -18,8 +18,11 @@ import colorsys
 pygame.init()
 
 # 2. ウィンドウのサイズを設定  あとでプロジェクターのサイズに要調整。
-screen_width = 1280
-screen_height = 720
+#screen_width = 1280
+#screen_height = 720
+
+screen_width = 1920
+screen_height = 1080
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 
@@ -99,6 +102,7 @@ class cursor:
 
     def draw(self):
         cursor_surface.fill((0,0,0,0))
+        print(self.x , self.y)
         pygame.draw.circle(cursor_surface,(255,255,255,self.clear),(self.x,self.y),25)
         self.clear -= 100
         if self.clear <= 0:
@@ -235,8 +239,7 @@ def change_x(A, B, now):
     x2, y2 = B
     now_X, now_y = now
 
-    result = x1 + ((x1 - x2) / (y1 - y2)) * (now_y-y1) + x1
-    return result
+    return ((x1 - x2) / (y1 - y2)) * (now_y-y1) + x1
     #try:
     #     result = x1 + (now_y - y1) * (x1 - x2) / now_y
     #     return result
@@ -249,8 +252,9 @@ def change_y(A, B, now):
     x2, y2 = B
     now_x, now_y = now
 
-    result = (y1 - y2) / now_y
-    return result
+    return ((y1 - y2) / (x1 - x2)) * (now_x - x1) + y1
+
+
 
     # try:
     #     result = y1 + now_x * ((y1 - y2) * (x1 - x2)) - ((y1 - y2) / (x1 , x2) * x1)
@@ -267,11 +271,11 @@ aruco_detector = cv2.aruco.ArucoDetector(aruco_dict, aruco_params)
 cap = cv2.VideoCapture(0)
 
 
-left_top = (1,1)
-right_top = (2,2)
-right_bottom = (3,3)
-left_bottom = (4,4)
-player = (1,1)
+left_top = ()
+right_top = ()
+right_bottom = ()
+left_bottom = ()
+player = ()
 
 ret, frame = cap.read()
 while ret != True:
@@ -285,7 +289,7 @@ while running:
     ret, frame = cap.read()
     if ret:
         markers, ids, rejected = aruco_detector.detectMarkers(frame)
-        #print(markers)
+        print(ids)
 
         for i in range(len(markers)):
             ID = ids[i]
@@ -296,7 +300,7 @@ while running:
             #ave[x,y]
             ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
 
-            print(ID)
+            #print(ID)
 
             if ID == 1:
                 left_top = ave
@@ -351,17 +355,26 @@ while running:
         print(f"left_bottom:{left_bottom}")
 
         print(f"player:{player}")
-    
     try:
-        mouse_x = ((screen.get_width()) / int(change_x(left_top,left_bottom,player) - change_x(right_top,right_bottom,player) / (player[0])))
-        mouse_x = int(numpy.abs(mouse_x))
-    except ZeroDivisionError:
-        mouse_x = 1
+        left_x = change_x(left_top,left_bottom,player)
+        right_x = change_x(right_top,right_bottom,player)
+
+        mouse_x = int(screen_width * (player[0] - left_x) / (right_x - left_x))
+
+        print(f"横 :{left_x,player[0],right_x, mouse_x}")
+    except:
+        if count % 50 == 0:
+            print(ZeroDivisionError)
     try:
-        mouse_y = (screen.get_height() / left_bottom[1] - left_top[1] / player[1])
-        mouse_y = int(numpy.abs(mouse_y))
-    except ZeroDivisionError:
-        mouse_y = 1
+        top_y = change_y(left_top,right_top,player)
+        bottom_y = change_y(left_bottom,right_bottom,player)
+
+        mouse_y = int(screen_height * (player[1] -  top_y) / (bottom_y - top_y))
+
+        print(f"縦 :{top_y,player[1],bottom_y, mouse_y}")
+    except:
+        if count % 50 == 0:
+            print(ZeroDivisionError)
 
     #print(mouse_x)
     #print(mouse_y)

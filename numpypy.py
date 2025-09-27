@@ -4,8 +4,7 @@ def change_x(A, B, now):
     x2, y2 = B
     now_X, now_y = now
 
-    result = x1 + ((x1 - x2) / (y1 - y2)) * (now_y-y1) + x1
-    return result
+    return ((x1 - x2) / (y1 - y2)) * (now_y-y1) + x1
     #try:
     #     result = x1 + (now_y - y1) * (x1 - x2) / now_y
     #     return result
@@ -18,8 +17,15 @@ def change_y(A, B, now):
     x2, y2 = B
     now_x, now_y = now
 
-    result = (y1 - y2) / now_y
-    return result
+    return (y1 - y2) / (now_y - y1)
+
+def keisan(A,B,now):
+    x1, y1 = A
+    x2, y2 = B
+    now_x, now_y = now
+
+
+    return (x1 - x2) / (y1 - y2) * now_y
 
 
 
@@ -36,8 +42,11 @@ right_top = 262,214
 right_bottom = 337,402
 left_bottom = 46,441
 player = 150,336
+#numpy.abs(int((left_top[0] - right_top[0])))},{int(player[0])}",{numpy.abs(int((left_top[0] - right_top[0]))) - int(player[0])
+print(f"個人計算:{(keisan(left_bottom,left_top,player) - keisan(right_bottom,right_top,player)) / player[0]}")
 
-print(f"個人計算:{numpy.abs(int((left_top[0] - right_top[0])))},{int(player[0])}",{numpy.abs(int((left_top[0] - right_top[0]))) - int(player[0])})
+実験 = ()
+print(f"実験:{実験}")
 
 print(f"チェンジx左{int(change_x(left_top,left_bottom,player))},右{int(change_x(right_top,right_bottom,player))}")
 print
@@ -47,6 +56,6 @@ print
 mouse_x = 1280 / ((int(change_x(left_top,left_bottom,player)) - int(change_x(right_top,right_bottom,player))) / (player[0] - int(change_x(left_top,left_bottom,player))))
 print(mouse_x)
 
-mouse_y = 720 / (left_bottom[1] - left_top[1]) / player[1]
+mouse_y = 720 / change_y(left_bottom,left_top,player)
 print(mouse_y)
 
