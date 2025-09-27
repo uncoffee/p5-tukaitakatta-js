@@ -18,11 +18,22 @@ import colorsys
 pygame.init()
 
 # 2. ウィンドウのサイズを設定  あとでプロジェクターのサイズに要調整。
-#screen_width = 1280
-#screen_height = 720
 
-screen_width = 1920
-screen_height = 1080
+screen_mode = 2
+
+if screen_mode == 0:
+    screen_width = 1280
+    screen_height = 720
+
+
+if screen_mode == 1:
+    screen_width = 1920 * 0.8
+    screen_height = 1080 * 0.8
+
+if screen_mode == 2:
+    screen_width = 1920
+    screen_height = 1080
+ 
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 
@@ -89,25 +100,31 @@ pygame.display.set_caption("初めてのPygameウィンドウ")
 
 
 backcolor_surface = pygame.Surface((screen_width,screen_height), pygame.SRCALPHA)
+
 circle_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
+
 comment_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
+
+check_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
 
 cursor_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
 cursor_list = []
 
 class cursor:
-    def __init__(self,cursor_point):
+    def __init__(self,cursor_point,):
         self.x,self.y = cursor_point
         self.clear = 200
 
     def draw(self):
-        cursor_surface.fill((0,0,0,0))
-        print(self.x , self.y)
+        #cursor_surface.fill((0,0,0,0))
+        #print(self.x , self.y)
         pygame.draw.circle(cursor_surface,(255,255,255,self.clear),(self.x,self.y),25)
         self.clear -= 100
         if self.clear <= 0:
             self.clear = 0
-            
+
+def random_color():
+    return (random.randint(0,255),random.randint(0,255),random.randint(0,255))
 
 
 x_list = []
@@ -197,7 +214,7 @@ class make_circle:
         #print(f"self_clear  {self.clear}")
         r,g,b = self.color
         
-        circle_surface.fill((0,0,0,0))
+        #circle_surface.fill((0,0,0,0))
         #外周円
         pygame.draw.circle(circle_surface,(r,g,b,self.clear),(self.x,self.y),self.size)
         pygame.draw.circle(circle_surface,(r,g,b,0),(self.x,self.y),self.size - 4)
@@ -285,11 +302,18 @@ while ret != True:
 # 4. ゲームループ
 running = True
 while running:
+    screen.fill((0,0,0))
+    backcolor_surface.fill((0,0,0,0))
+    circle_surface.fill((0,0,0,0))
+    comment_surface.fill((0,0,0,0))
+    check_surface.fill((0,0,0,0))
+    cursor_surface.fill((0,0,0,0))
+
 
     ret, frame = cap.read()
     if ret:
         markers, ids, rejected = aruco_detector.detectMarkers(frame)
-        print(ids)
+        #print(ids)
 
         for i in range(len(markers)):
             ID = ids[i]
@@ -304,18 +328,22 @@ while running:
 
             if ID == 1:
                 left_top = ave
+                pygame.draw.circle(check_surface, (255,255,255),(int(screen_width / 20 * 1),int(screen_height / 20 * 19)), 30)
                 #print(left_top)
 
             if ID == 2:
                 right_top = ave
+                pygame.draw.circle(check_surface, (255,255,255),(int(screen_width / 20 * 19),int(screen_height / 20 * 19)), 30)
                 #print(right_top)
 
             if ID == 3:
                 right_bottom = ave
+                pygame.draw.circle(check_surface, (255,255,255),(int(screen_width / 20 * 19),int(screen_height / 20 * 1)), 30)
                 #print(right_bottom)
 
             if ID == 4:
                 left_bottom = ave
+                pygame.draw.circle(check_surface, (255,255,255),(int(screen_width / 20 * 1),int(screen_height / 20 * 1)), 30)
                 #print(left_bottom)
 
             if ID == 5:
@@ -343,38 +371,45 @@ while running:
     count += 1
     #print(f"count  {count}")
 
+        
+
 
     #マウスの位置を人がいる位置に置き換えるプログラム（日本語はもともとおかしいわ！
-    if count % 100 == 0:
-        print(f"left_top:{left_top}")
 
-        print(f"right_top:{right_top}")
+    # if count % 100 == 0:
+    #     print(f"left_top:{left_top}")
 
-        print(f"right_bottom:{right_bottom}")
+    #     print(f"right_top:{right_top}")
 
-        print(f"left_bottom:{left_bottom}")
+    #     print(f"right_bottom:{right_bottom}")
 
-        print(f"player:{player}")
+    #     print(f"left_bottom:{left_bottom}")
+
+    #     print(f"player:{player}")
+
     try:
         left_x = change_x(left_top,left_bottom,player)
         right_x = change_x(right_top,right_bottom,player)
 
-        mouse_x = int(screen_width * (player[0] - left_x) / (right_x - left_x))
+        mouse_x = int(screen_width * 0.9 * (player[0] - left_x) / (right_x - left_x) + screen_width * 0.05)
 
         print(f"横 :{left_x,player[0],right_x, mouse_x}")
     except:
         if count % 50 == 0:
             print(ZeroDivisionError)
+        
     try:
         top_y = change_y(left_top,right_top,player)
         bottom_y = change_y(left_bottom,right_bottom,player)
 
-        mouse_y = int(screen_height * (player[1] -  top_y) / (bottom_y - top_y))
+        mouse_y = int(screen_height * 0.9 * (player[1] -  top_y) / (bottom_y - top_y) + screen_height * 0.05)
 
         print(f"縦 :{top_y,player[1],bottom_y, mouse_y}")
     except:
         if count % 50 == 0:
             print(ZeroDivisionError)
+
+
 
     #print(mouse_x)
     #print(mouse_y)
@@ -420,6 +455,7 @@ while running:
     if count % 2 == 0:
         colors = backcolor(color_count % 100,50,50)
         backcolor_surface.fill((0,0,0,150))
+        
         #backcolor_surface.fill((colors[0],colors[1],colors[2],200))
         
 
@@ -449,8 +485,9 @@ while running:
     screen.blit(comment_surface,(0,0))
     screen.blit(circle_surface,(0,0))
     screen.blit(cursor_surface,(0,0))
+    screen.blit(check_surface,(0,0))
 
-    pygame.display.flip() # または pygame.display.update
+    pygame.display.update() # または pygame.display.update
 
     #fpsの値を設定
     clock.tick(fps)
