@@ -19,22 +19,19 @@ pygame.init()
 
 # 2. ウィンドウのサイズを設定  あとでプロジェクターのサイズに要調整。
 
-screen_mode = 2
+screen_mode = input("画面モードを選択してください (0: 1280x720, 1: 1920x1080 フルスクリーン): ")
 
 if screen_mode == 0:
     screen_width = 1280
     screen_height = 720
-
+    screen = pygame.display.set_mode((screen_width, screen_height))
 
 if screen_mode == 1:
-    screen_width = 1920 * 0.8
-    screen_height = 1080 * 0.8
-
-if screen_mode == 2:
     screen_width = 1920
     screen_height = 1080
+    screen = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREEN | pygame.HWSURFACE)
  
-screen = pygame.display.set_mode((screen_width, screen_height))
+
 
 
 #pygameの中で使う変数の宣言
@@ -46,14 +43,19 @@ fps = 100#一秒間に起きる画面更新の回数
 
 split_varue = 20 #円が出てくるマス目の細かさ
 
+
+comment_size = 200#コメントのサイズを指定する
 comment_file_list = ["good.png"] #コメントのバリエーション
 comment_list = []
 
-comment_size = 200#コメントのサイズを指定する
 
+circle_size = 180 #円のサイズを指定する
+circle_file_list =["青足.png","赤足.png","青手.png","赤手.png"] #円のバリエーション
+circle_list = []
 
 
 edge_range = 3 #外周と生成円の距離HTMLのpaddingのノリ
+
 
 #変更不可
 
@@ -62,6 +64,12 @@ for filename in comment_file_list:
     scale = comment_size / image.get_width()
     newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
     comment_list.append(newimage)
+
+for filename in circle_file_list:
+    image = pygame.image.load(filename)
+    scale = circle_size / image.get_width()
+    newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
+    circle_list.append(newimage)
 
 game_point = 0
 
@@ -310,6 +318,21 @@ while running:
     cursor_surface.fill((0,0,0,0))
 
 
+
+    pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
+
+
+  
+    pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.9),int(screen_height * 0.1)), 30)
+
+
+
+    pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.9),int(screen_height * 0.9)), 30)
+
+
+    pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
+
+
     ret, frame = cap.read()
     if ret:
         markers, ids, rejected = aruco_detector.detectMarkers(frame)
@@ -328,27 +351,35 @@ while running:
 
             if ID == 1:
                 left_top = ave
-                pygame.draw.circle(check_surface, (255,255,255),(int(screen_width / 20 * 1),int(screen_height / 20 * 19)), 30)
+                pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
                 #print(left_top)
 
             if ID == 2:
                 right_top = ave
-                pygame.draw.circle(check_surface, (255,255,255),(int(screen_width / 20 * 19),int(screen_height / 20 * 19)), 30)
+                pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.9),int(screen_height * 0.1)), 30)
                 #print(right_top)
 
             if ID == 3:
                 right_bottom = ave
-                pygame.draw.circle(check_surface, (255,255,255),(int(screen_width / 20 * 19),int(screen_height / 20 * 1)), 30)
+                pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.9),int(screen_height * 0.9)), 30)
                 #print(right_bottom)
 
             if ID == 4:
                 left_bottom = ave
-                pygame.draw.circle(check_surface, (255,255,255),(int(screen_width / 20 * 1),int(screen_height / 20 * 1)), 30)
+                pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
                 #print(left_bottom)
 
             if ID == 5:
-                player = ave
-                #print(player)
+                player_red_feet = ave,5
+
+            if ID == 6:
+                player_red_hand = ave,6
+
+            if ID == 7:
+                player_blue_feet = ave,7
+
+            if ID == 8:
+                player_blue_hand = ave,8
 
     # 5. イベント処理
     
