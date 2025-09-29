@@ -51,19 +51,23 @@ split_varue = 20 #円が出てくるマス目の細かさ
 
 use_aruco = True #True:設定したarucoマーカを追尾　False:マウスカードルを追尾
 
-comment_size = 200#コメントのサイズを指定する
-comment_file_list = ["good.png"] #コメントのバリエーション
+comment_size = 200 #コメントのサイズを指定する
+comment_file_list = ["good.png"] #コメントのバリエーション　追加可能
 comment_list = []
 
-
 circle_size = 180 #円のサイズを指定する
-circle_file_list =["青足.png","赤足.png","青手.png","赤手.png"] #円のバリエーション
-circle_list = []
+
+level_size = 180 #難易度boxの大きさを変える
 
 edge_range = 3 #外周と生成円の距離HTMLのpaddingのノリ
 
 
 #変更不可
+circle_file_list =["青足.png","赤足.png","青手.png","赤手.png"] #円のバリエーション
+circle_list = []
+
+level_file_list = ["easy.png" , "normal.png" , "hard.png"] #難易度のバリエーション
+level_list = []
 
 for filename in comment_file_list:
     image = pygame.image.load(filename)
@@ -76,6 +80,12 @@ for filename in circle_file_list:
     scale = circle_size / image.get_width()
     newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
     circle_list.append(newimage)
+
+for filename in level_file_list:
+    image = pygame.image.load(filename)
+    scale = level_size / image.get_width()
+    newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
+    level_list.append(newimage)
 
 mode = "set"
 
@@ -113,6 +123,8 @@ del_target_comment = "nan"
 
 #surfaceの設定
 pygame.display.set_caption("デジタル体育")
+
+menu_surface = pygame.Surface((screen_width,screen_height), pygame.SRCALPHA)
 
 backcolor_surface = pygame.Surface((screen_width,screen_height), pygame.SRCALPHA)
 
@@ -322,14 +334,14 @@ while running:
     clock.tick(fps)
 
     #描写のリセット
-    screen.fill((0,0,0))
+    screen.fill((50,50,50))
     backcolor_surface.fill((0,0,0,0))
     circle_surface.fill((0,0,0,0))
     comment_surface.fill((0,0,0,0))
     cursor_surface.fill((0,0,0,0))
 
-    if use_aruco:
-        if mode == "set":
+    if mode == "set":
+        if use_aruco:
             count += 1
 
             pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
@@ -399,9 +411,22 @@ while running:
                             check_surface.blit(circle_list[3], ((screen_width * 5 // 9) + 90,(screen_height * 2 // 9) - 50))
 
                         if ids in 1 and ids in 2 and ids in 3 and ids in 4 and (ids in 5 or ids in 6 or ids in 7 or ids in 8):
-                            mode = "menu"
+                            check_count += 1
+                            if check_count >= 100:
+                                if ids in 1 and ids in 2 and ids in 3 and ids in 4 and (ids in 5 or ids in 6 or ids in 7 or ids in 8):
+                                    mode = "menu"
+                                    cv2.destroyAllWindows()
+                                else:
+                                    check_count = 0
 
             screen.blit(check_surface,(0,0))
+
+        else:
+            mode = "menu"
+
+    if mode == "menu":
+        
+
 
             
     if mode =="play":
