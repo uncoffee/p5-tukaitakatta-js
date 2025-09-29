@@ -169,6 +169,19 @@ red_hand = (0,0,0)
 blue_feet = (0,0,0)
 blue_hand = (0,0,0)
 
+circle_time = 0
+
+if mode == "play":
+    if difficulty_level == "easy":
+        circle_time = 10
+
+    if difficulty_level == "normal":
+        circle_time = 7
+
+    if difficulty_level == "hard":
+        circle_time = 5
+
+
 
 def spotlight(point):
     x , y = point
@@ -234,17 +247,15 @@ class make_circle:
         if self.move:#デフォルトサイズどうする?仮にsize 25とする
             sa = self.main_size - default_size
 
-            temp = self.bps * fps
+            temp = self.cps * fps
 
             if self.size >= default_size:
                 self.size -= sa / temp
             else:
                 self.size = default_size
 
-
-            if self.clear <= 200:
-                self.clear += 200 / temp 
-            else:
+            self.clear += 200 / temp 
+            if self.clear >= 200:
                 self.clear = 200
 
             self.age += 1
@@ -261,7 +272,7 @@ class make_circle:
                     self.alive = False
 
             if self.alive:
-                if abs(self.x - mouse_x) <= default_size and abs(self.y - mouse_y ) <= default_size:
+                if abs(self.x - mouse_x) <= default_size and abs(self.y - mouse_y) <= default_size:
                     game_point += 1
                     print(game_point)
                     self.alive = False
@@ -277,6 +288,7 @@ class make_circle:
         pygame.draw.circle(circle_surface,(r,g,b,0),(self.x,self.y),self.size - 4)
 
         #内周円
+        circle_list[self.circle_id].set_alpha(self.clear)
         screen.blit(circle_list[self.circle_id], (self.x - 90, self.y - 50))
 
 class tap_comment:
@@ -331,6 +343,33 @@ def coordinate():
         return red_feet,red_hand,blue_feet,blue_hand
     else:
         return pygame.mouse.get_pos(),0,1,2,3,4
+
+def player_chege_point(player):
+    if use_aruco:
+
+        try:
+            left_x = change_x(left_top,left_bottom,player)
+            right_x = change_x(right_top,right_bottom,player)
+
+            mouse_x = int(screen_width * 0.8 * (player[0] - left_x) / (right_x - left_x) + screen_width * 0.1)
+
+            #print(f"横 :{left_x,player[0],right_x, mouse_x}")
+        except:
+            if count % 50 == 0:
+                print("eroDivisionError")
+            
+        try:
+            top_y = change_y(left_top,right_top,player)
+            bottom_y = change_y(left_bottom,right_bottom,player)
+
+            mouse_y = int(screen_height * 0.8 * (player[1] -  top_y) / (bottom_y - top_y) + screen_height * 0.1)
+
+            #print(f"縦 :{top_y,player[1],bottom_y, mouse_y}")
+        except:
+            if count % 50 == 0:
+                print("eroDivisionError")
+
+        return mouse_x , mouse_y
 
 
 
@@ -539,9 +578,19 @@ while running:
         if 524 <= coo_x <= 1398 and 734 <= coo_y <= 1006:
             start_count += 2
             if start_count >= 200:
-                if 1237 <= coo_x <= 1639 and 242 <= coo_y <= 485:
+                if 524 <= coo_x <= 1398 and 734 <= coo_y <= 1006:
                     start_count = 255
                     mode = "play"
+                    if mode == "play":
+                        if difficulty_level == "easy":
+                            circle_time = 10
+
+                        if difficulty_level == "normal":
+                            circle_time = 7
+
+                        if difficulty_level == "hard":
+                            circle_time = 5
+
         else:
             start_count -=8
             if start_count <= 0:
@@ -563,39 +612,14 @@ while running:
 
         #マウスの位置を人がいる位置に置き換えるプログラム（日本語はもともとおかしいわ！
 
-        def player_chege_point(player):
-            if use_aruco:
 
-                try:
-                    left_x = change_x(left_top,left_bottom,player)
-                    right_x = change_x(right_top,right_bottom,player)
-
-                    mouse_x = int(screen_width * 0.8 * (player[0] - left_x) / (right_x - left_x) + screen_width * 0.1)
-
-                    #print(f"横 :{left_x,player[0],right_x, mouse_x}")
-                except:
-                    if count % 50 == 0:
-                        print("eroDivisionError")
-                    
-                try:
-                    top_y = change_y(left_top,right_top,player)
-                    bottom_y = change_y(left_bottom,right_bottom,player)
-
-                    mouse_y = int(screen_height * 0.8 * (player[1] -  top_y) / (bottom_y - top_y) + screen_height * 0.1)
-
-                    #print(f"縦 :{top_y,player[1],bottom_y, mouse_y}")
-                except:
-                    if count % 50 == 0:
-                        print("eroDivisionError")
-
-                return mouse_x , mouse_y
 
         #円の座標を設定する
-        if  count % 400 == 0 :
+        if  count % (circle_time * 125) == 0:
             while abs(new_circle_x - last_circle_x) <= split_screen_x * 5 and abs(new_circle_y - last_circle_y) <= split_screen_y * 5:
                 new_circle_x = random.randint(edge_range,split_varue - edge_range) * split_screen_x
                 new_circle_y = random.randint(edge_range,split_varue - edge_range) * split_screen_y
-            new_circle = make_circle(new_circle_x,new_circle_y,3,len(circle_list) - 1)
+            new_circle = make_circle(new_circle_x,new_circle_y,circle_time,len(circle_list) - 1)
             circles.append(new_circle)
             last_circle_x = new_circle_x
             last_circle_y = new_circle_y
