@@ -74,7 +74,7 @@ for filename in circle_file_list:
     newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
     circle_list.append(newimage)
 
-print(circle_list)
+game_mode = "set"
 
 game_point = 0
 
@@ -108,9 +108,8 @@ comment_q = []
 
 del_target_comment = "nan"
 
-# 3. ウィンドウのタイトルを設定
-pygame.display.set_caption("初めてのPygameウィンドウ")
-
+#surfaceの設定
+pygame.display.set_caption("デジタル体育")
 
 backcolor_surface = pygame.Surface((screen_width,screen_height), pygame.SRCALPHA)
 
@@ -129,6 +128,8 @@ class cursor:
         self.clear = 200
 
     def draw(self):
+        if self.clear == 0:
+            return
         #cursor_surface.fill((0,0,0,0))
         #print(self.x , self.y)
         pygame.draw.circle(cursor_surface,(255,255,255,self.clear),(self.x,self.y),25)
@@ -307,6 +308,7 @@ while ret != True:
 # 4. ゲームループ
 running = True
 while running:
+    #描写のリセット
     screen.fill((0,0,0))
     backcolor_surface.fill((0,0,0,0))
     circle_surface.fill((0,0,0,0))
@@ -315,68 +317,66 @@ while running:
     cursor_surface.fill((0,0,0,0))
 
 
+    if game_mode == "set":
+        pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
 
-    pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
+        pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.9),int(screen_height * 0.1)), 30)
 
+        pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.9),int(screen_height * 0.9)), 30)
 
-  
-    pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.9),int(screen_height * 0.1)), 30)
+        pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
 
+        if count % 5 == 0:
+            ret, frame = cap.read()
+            if ret:
+                markers, ids, rejected = aruco_detector.detectMarkers(frame)
+                #print(ids)
 
+                for i in range(len(markers)):
+                    ID = ids[i]
+                    C1 = markers[i][0][0]
+                    C2 = markers[i][0][1]
+                    C3 = markers[i][0][2]
+                    C4 = markers[i][0][3]
+                    #ave[x,y]
+                    ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
 
-    pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.9),int(screen_height * 0.9)), 30)
+                    #print(ID)
 
+                    if ID == 1:
+                        left_top = ave
+                        pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
+                        #print(left_top)
 
-    pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
+                    if ID == 2:
+                        right_top = ave
+                        pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.9),int(screen_height * 0.1)), 30)
+                        #print(right_top)
 
-    if count % 5 == 0:
-        ret, frame = cap.read()
-        if ret:
-            markers, ids, rejected = aruco_detector.detectMarkers(frame)
-            #print(ids)
+                    if ID == 3:
+                        right_bottom = ave
+                        pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.9),int(screen_height * 0.9)), 30)
+                        #print(right_bottom)
 
-            for i in range(len(markers)):
-                ID = ids[i]
-                C1 = markers[i][0][0]
-                C2 = markers[i][0][1]
-                C3 = markers[i][0][2]
-                C4 = markers[i][0][3]
-                #ave[x,y]
-                ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
+                    if ID == 4:
+                        left_bottom = ave
+                        pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
+                        #print(left_bottom)
 
-                #print(ID)
+                    if ID == 5:
+                        red_feet = player_chege_point(ave),5
+                        screen.blit(circle_list[0], ((screen_width * 4 // 9) + 90,(screen_height * 4 // 9) + 50))
 
-                if ID == 1:
-                    left_top = ave
-                    pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
-                    #print(left_top)
+                    if ID == 6:
+                        red_hand = player_chege_point(ave),6
+                        screen.blit(circle_list[0], ((screen_width * 4 // 9) + 90,(screen_height * 5 // 9) + 50))
 
-                if ID == 2:
-                    right_top = ave
-                    pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.9),int(screen_height * 0.1)), 30)
-                    #print(right_top)
+                    if ID == 7:
+                        blue_feet = player_chege_point(ave),7
+                        screen.blit(circle_list[0], ((screen_width * 5 // 9) + 90,(screen_height * 4 // 9) + 50))
 
-                if ID == 3:
-                    right_bottom = ave
-                    pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.9),int(screen_height * 0.9)), 30)
-                    #print(right_bottom)
-
-                if ID == 4:
-                    left_bottom = ave
-                    pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
-                    #print(left_bottom)
-
-                if ID == 5:
-                    red_feet = player_chege_point(ave),5
-
-                if ID == 6:
-                    red_hand = player_chege_point(ave),6
-
-                if ID == 7:
-                    blue_feet = player_chege_point(ave),7
-
-                if ID == 8:
-                    blue_hand = player_chege_point(ave),8
+                    if ID == 8:
+                        blue_hand = player_chege_point(ave),8
 
     # 5. イベント処理
     
