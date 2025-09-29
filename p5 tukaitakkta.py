@@ -40,8 +40,8 @@ pygame.init()
 
 #pygameの中で使う変数の宣言
 
-screen_width = 1920
-screen_height = 1080
+screen_width = 1920 * 0.8
+screen_height = 1080 * 0.8
 screen = pygame.display.set_mode((screen_width, screen_height),pygame.HWSURFACE)
 
 
@@ -89,7 +89,7 @@ for filename in level_file_list:
     newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
     level_list.append(newimage)
 
-image = pygame.image.load("game_level_frame.png")
+image = pygame.image.load("level_frame.png")
 scale = 1800 / image.get_width()
 game_level_frame = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
 
@@ -127,6 +127,12 @@ comment_y = 0
 comment_text = ""
 comment_q = []
 
+coo = (0,0),0
+
+easy_count = 0
+normal_count = 0
+hard_count = 0
+
 del_target_comment = "nan"
 
 #surfaceの設定
@@ -156,6 +162,7 @@ blue_hand = (0,0,0)
 
 
 def spotlight(point):
+    global cursor_list
     new_cursor = cursor(point)
     cursor_list.append(new_cursor)
     cursor_alive_list = []
@@ -337,7 +344,7 @@ def coordinate():
                     blue_hand = player_chege_point(ave),8
         return red_feet,red_hand,blue_feet,blue_hand
     else:
-        return pygame.mouse.get_pos(),pygame.mouse.get_pos()
+        return pygame.mouse.get_pos(),0,1,2,3,4
 
 
 
@@ -403,6 +410,7 @@ while running:
     circle_surface.fill((0,0,0,0))
     comment_surface.fill((0,0,0,0))
     cursor_surface.fill((0,0,0,0))
+    menu_surface.fill((0,0,0,0))
 
     if mode == "set":
         if use_aruco:
@@ -489,20 +497,23 @@ while running:
             mode = "menu"
 
     if mode == "menu":
-        
+        coo_x = 0
+        coo_y = 0
+                
         count += 1
         if count % 5 == 0:
             coo = coordinate()
-            spotlight(coo[0])
             coo_x,coo_y = coo[0] #red_feet or mouse
+        spotlight(coo[0])
 
-        screen.blit(game_level_frame, ((screen_width / 2) - 900,(screen_height / 2) - 500))
-        screen.blit(level_list[0], ((screen_width * 3 / 12) -300.0,(screen_height / 3) - 167))
-        screen.blit(level_list[1], ((screen_width * 6 / 12) -300.0,(screen_height / 3) - 167))
-        screen.blit(level_list[2], ((screen_width * 9 / 12) -300.0,(screen_height / 3) - 167))
+        menu_surface.blit(game_level_frame, ((screen_width / 2) - 900,(screen_height / 2) - 500))
+        menu_surface.blit(level_list[0], ((screen_width * 3 / 12) -300.0,(screen_height / 3) - 167))
+        menu_surface.blit(level_list[1], ((screen_width * 6 / 12) -300.0,(screen_height / 3) - 167))
+        menu_surface.blit(level_list[2], ((screen_width * 9 / 12) -300.0,(screen_height / 3) - 167))
 
         if 277 <= coo_x <= 679 and 405 >= coo_y >= 315:
             easy_count += 1
+            print(easy_count)
             if easy_count >= 100:
                 if 275 <= coo_x <= 792 and 405 >= coo_y >= 315:
                     level_list[0].set_alpha(255)
@@ -513,6 +524,7 @@ while running:
             easy_count -= 1
             if easy_count <= 0:
                 easy_count = 0
+        print(easy_count)
 
         if 757 <= coo_x <= 1159 and 405 >= coo_y >= 315:
             normal_count += 1
@@ -539,6 +551,10 @@ while running:
             hard_count -= 1
             if hard_count <= 0:
                 hard_count = 0
+
+        screen.blit(menu_surface,(0,0))
+        screen.blit(cursor_surface,(0,0))
+
 
             
             
