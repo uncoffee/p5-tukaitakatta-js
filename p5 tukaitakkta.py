@@ -40,8 +40,8 @@ pygame.init()
 
 #pygameの中で使う変数の宣言
 
-screen_width = 1920 * 0.8
-screen_height = 1080 * 0.8
+screen_width = 1920
+screen_height = 1080
 screen = pygame.display.set_mode((screen_width, screen_height),pygame.HWSURFACE)
 
 
@@ -89,6 +89,10 @@ for filename in level_file_list:
     newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
     level_list.append(newimage)
 
+level_list[0].set_alpha(255)
+level_list[1].set_alpha(50)
+level_list[2].set_alpha(50)
+
 image = pygame.image.load("level_frame.png")
 scale = 1800 / image.get_width()
 game_level_frame = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
@@ -128,6 +132,8 @@ comment_text = ""
 comment_q = []
 
 coo = (0,0),0
+coo_x = 0
+coo_y = 0
 
 easy_count = 0
 normal_count = 0
@@ -149,7 +155,6 @@ comment_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
 check_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
 
 cursor_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
-cursor_list = []
 
 left_top = (0,0)
 right_top = (0,0)
@@ -162,31 +167,8 @@ blue_hand = (0,0,0)
 
 
 def spotlight(point):
-    global cursor_list
-    new_cursor = cursor(point)
-    cursor_list.append(new_cursor)
-    cursor_alive_list = []
-    for i in cursor_list:
-        i.draw()
-        if i.alive:
-            cursor_alive_list.append(i)
-    
-    cursor_list = cursor_alive_list
-
-class cursor:
-    def __init__(self,cursor_point):
-        self.x,self.y = cursor_point
-        self.clear = 200
-        self.alive = True
-
-    def draw(self):
-        if self.clear == 0:
-            return
-        #print(self.x , self.y)
-        pygame.draw.circle(cursor_surface,(255,255,255,self.clear),(self.x,self.y),25)
-        self.clear -= 100
-        if self.clear <= 0:
-            self.alive = False
+    x , y = point
+    pygame.draw.circle(cursor_surface,(255,255,255,200),(x,y),25)
 
 def random_color():
     return (random.randint(0,255),random.randint(0,255),random.randint(0,255))
@@ -497,12 +479,11 @@ while running:
             mode = "menu"
 
     if mode == "menu":
-        coo_x = 0
-        coo_y = 0
                 
         count += 1
         if count % 5 == 0:
             coo = coordinate()
+            print(coo)
             coo_x,coo_y = coo[0] #red_feet or mouse
         spotlight(coo[0])
 
@@ -511,46 +492,40 @@ while running:
         menu_surface.blit(level_list[1], ((screen_width * 6 / 12) -300.0,(screen_height / 3) - 167))
         menu_surface.blit(level_list[2], ((screen_width * 9 / 12) -300.0,(screen_height / 3) - 167))
 
-        if 277 <= coo_x <= 679 and 405 >= coo_y >= 315:
+        if 277 <= coo_x <= 679 and 242 <= coo_y <= 485:
             easy_count += 1
             print(easy_count)
-            if easy_count >= 100:
-                if 275 <= coo_x <= 792 and 405 >= coo_y >= 315:
+            if easy_count >= 50:
+                if 277 <= coo_x <= 679 and 242 <= coo_y <= 485:
                     level_list[0].set_alpha(255)
                     level_list[1].set_alpha(50)
                     level_list[2].set_alpha(50)
                     easy_count = 0
         else:
-            easy_count -= 1
-            if easy_count <= 0:
-                easy_count = 0
-        print(easy_count)
+            easy_count = 0
+            print(easy_count)
 
-        if 757 <= coo_x <= 1159 and 405 >= coo_y >= 315:
+        if 757 <= coo_x <= 1159 and 242 <= coo_y <= 485:
             normal_count += 1
-            if normal_count >= 100:
-                if 275 <= coo_x <= 792 and 405 >= coo_y >= 315:
+            if normal_count >= 50:
+                if 757 <= coo_x <= 1159 and 242 <= coo_y <= 485:
                     level_list[1].set_alpha(255)
                     level_list[2].set_alpha(50)
                     level_list[0].set_alpha(50)
                     normal_count = 0
         else:
-            normal_count -= 1
-            if normal_count <= 0:
-                normal_count = 0
+            normal_count = 0
 
-        if 1237 <= coo_x <= 1639 and 405 >= coo_y >= 315:
+        if 1237 <= coo_x <= 1639 and 242 <= coo_y <= 485:
             hard_count += 1
-            if hard_count >= 100:
-                if 275 <= coo_x <= 792 and 405 >= coo_y >= 315:
+            if hard_count >= 50:
+                if 1237 <= coo_x <= 1639 and 242 <= coo_y <= 485:
                     level_list[2].set_alpha(255)
                     level_list[0].set_alpha(50)
                     level_list[1].set_alpha(50)
                     hard_count = 0
         else:
-            hard_count -= 1
-            if hard_count <= 0:
-                hard_count = 0
+            hard_count = 0
 
         screen.blit(menu_surface,(0,0))
         screen.blit(cursor_surface,(0,0))
