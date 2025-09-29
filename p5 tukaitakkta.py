@@ -35,6 +35,8 @@ pygame.init()
 #         screen = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREEN | pygame.HWSURFACE)
 #         mode_check = False
 
+#pygameの中で使う画像の比率
+
 
 #pygameの中で使う変数の宣言
 
@@ -49,7 +51,7 @@ fps = 100#一秒間に起きる画面更新の回数
 
 split_varue = 20 #円が出てくるマス目の細かさ
 
-use_aruco = True #True:設定したarucoマーカを追尾　False:マウスカードルを追尾
+use_aruco = False #True:設定したarucoマーカを追尾　False:マウスカードルを追尾
 
 comment_size = 200 #コメントのサイズを指定する
 comment_file_list = ["good.png"] #コメントのバリエーション　追加可能
@@ -57,7 +59,7 @@ comment_list = []
 
 circle_size = 180 #円のサイズを指定する
 
-level_size = 180 #難易度boxの大きさを変える
+level_size = 600#難易度boxの大きさを変える
 
 edge_range = 3 #外周と生成円の距離HTMLのpaddingのノリ
 
@@ -86,6 +88,12 @@ for filename in level_file_list:
     scale = level_size / image.get_width()
     newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
     level_list.append(newimage)
+
+image = pygame.image.load("game_level_frame.png")
+scale = 1800 / image.get_width()
+game_level_frame = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
+
+
 
 mode = "set"
 
@@ -396,19 +404,19 @@ while running:
 
                         if ID == 5:
                             red_feet = player_chege_point(ave),5
-                            check_surface.blit(circle_list[0], ((screen_width * 4 // 9) + 90,(screen_height * 1 // 9) - 50))
+                            check_surface.blit(circle_list[0], ((screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50))
 
                         if ID == 6:
                             red_hand = player_chege_point(ave),6
-                            check_surface.blit(circle_list[1], ((screen_width * 4 // 9) + 90,(screen_height * 2 // 9) - 50))
+                            check_surface.blit(circle_list[1], ((screen_width * 4 // 9) - 90,(screen_height * 2 // 9) - 50))
 
                         if ID == 7:
                             blue_feet = player_chege_point(ave),7
-                            check_surface.blit(circle_list[2], ((screen_width * 5 // 9) + 90,(screen_height * 1 // 9) - 50))
+                            check_surface.blit(circle_list[2], ((screen_width * 5 // 9) - 90,(screen_height * 1 // 9) - 50))
 
                         if ID == 8:
                             blue_hand = player_chege_point(ave),8
-                            check_surface.blit(circle_list[3], ((screen_width * 5 // 9) + 90,(screen_height * 2 // 9) - 50))
+                            check_surface.blit(circle_list[3], ((screen_width * 5 // 9) - 90,(screen_height * 2 // 9) - 50))
 
                         if ids in 1 and ids in 2 and ids in 3 and ids in 4 and (ids in 5 or ids in 6 or ids in 7 or ids in 8):
                             check_count += 1
@@ -425,7 +433,11 @@ while running:
             mode = "menu"
 
     if mode == "menu":
-        
+        screen.blit(game_level_frame, ((screen_width / 2) - 900,(screen_height / 2) - 500))
+        screen.blit(level_list[0], ((screen_width * 3 / 12) -300.0,(screen_height / 3) - 166.66666666666669))
+        screen.blit(level_list[1], ((screen_width * 6 / 12) -300.0,(screen_height / 3) - 166.66666666666669))
+        screen.blit(level_list[2], ((screen_width * 9 / 12) -300.0,(screen_height / 3) - 166.66666666666669))
+
 
 
             
