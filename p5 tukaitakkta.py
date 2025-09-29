@@ -1,8 +1,6 @@
 #"C:/Program Files/Python311/python.exe" pythonのインストール先
 #pip install 打ち込むの忘れずにね！
 
-#歩いたら　オノマトペだそうね！
-
 #pip要る
 import numpy
 import pygame
@@ -12,7 +10,6 @@ import cv2 #pip install opencv-python モジュ:pip install opencv-contrib-pytho
 #pipいらない
 import random
 import colorsys
-
 
 # 1. Pygame の初期化
 pygame.init()
@@ -71,6 +68,9 @@ circle_list = []
 level_file_list = ["easy.png" , "normal.png" , "hard.png"] #難易度のバリエーション
 level_list = []
 
+start_button_file_list = ["start_button.png" , "start_button_frame.png"]
+start_button_list = []
+
 for filename in comment_file_list:
     image = pygame.image.load(filename)
     scale = comment_size / image.get_width()
@@ -89,17 +89,19 @@ for filename in level_file_list:
     newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
     level_list.append(newimage)
 
-level_list[0].set_alpha(255)
-level_list[1].set_alpha(50)
-level_list[2].set_alpha(50)
+for filename in start_button_file_list:
+    image = pygame.image.load(filename)
+    scale = 1000 / image.get_width()
+    newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
+    start_button_list.append(newimage)
 
 image = pygame.image.load("level_frame.png")
 scale = 1800 / image.get_width()
 game_level_frame = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
 
-
-
 mode = "set"
+
+difficulty_level = "easy"
 
 game_point = 0
 
@@ -135,9 +137,11 @@ coo = (0,0),0
 coo_x = 0
 coo_y = 0
 
-easy_count = 0
-normal_count = 0
-hard_count = 0
+easy_count = 255
+normal_count = 55
+hard_count = 55
+
+start_count = 0
 
 del_target_comment = "nan"
 
@@ -487,45 +491,63 @@ while running:
             coo_x,coo_y = coo[0] #red_feet or mouse
         spotlight(coo[0])
 
+        level_list[0].set_alpha(easy_count)
+        level_list[1].set_alpha(normal_count)
+        level_list[2].set_alpha(hard_count)
+        start_button_list[1].set_alpha(start_count)
+
         menu_surface.blit(game_level_frame, ((screen_width / 2) - 900,(screen_height / 2) - 500))
-        menu_surface.blit(level_list[0], ((screen_width * 3 / 12) -300.0,(screen_height / 3) - 167))
-        menu_surface.blit(level_list[1], ((screen_width * 6 / 12) -300.0,(screen_height / 3) - 167))
-        menu_surface.blit(level_list[2], ((screen_width * 9 / 12) -300.0,(screen_height / 3) - 167))
+        menu_surface.blit(level_list[0], ((screen_width * 3 / 12) -300,(screen_height / 3) - 167))
+        menu_surface.blit(level_list[1], ((screen_width * 6 / 12) -300,(screen_height / 3) - 167))
+        menu_surface.blit(level_list[2], ((screen_width * 9 / 12) -300,(screen_height / 3) - 167))
+        menu_surface.blit(start_button_list[0], ((screen_width / 2) -500,(screen_height * 4 / 5) -278))
+        menu_surface.blit(start_button_list[1], ((screen_width / 2) -500,(screen_height * 4 / 5) -278))
 
         if 277 <= coo_x <= 679 and 242 <= coo_y <= 485:
-            easy_count += 1
-            print(easy_count)
-            if easy_count >= 50:
+            easy_count += 4
+            if easy_count >= 255:
                 if 277 <= coo_x <= 679 and 242 <= coo_y <= 485:
-                    level_list[0].set_alpha(255)
-                    level_list[1].set_alpha(50)
-                    level_list[2].set_alpha(50)
-                    easy_count = 0
+                    easy_count = 255
+                    difficulty_level = "easy"
         else:
-            easy_count = 0
-            print(easy_count)
+            if difficulty_level != "easy":
+                easy_count = 55
+
 
         if 757 <= coo_x <= 1159 and 242 <= coo_y <= 485:
-            normal_count += 1
-            if normal_count >= 50:
+            normal_count += 4
+            if normal_count >= 255:
                 if 757 <= coo_x <= 1159 and 242 <= coo_y <= 485:
-                    level_list[1].set_alpha(255)
-                    level_list[2].set_alpha(50)
-                    level_list[0].set_alpha(50)
-                    normal_count = 0
+                    normal_count = 255
+                    difficulty_level = "normal"
         else:
-            normal_count = 0
+            if difficulty_level != "normal":
+                normal_count = 55
+
+
 
         if 1237 <= coo_x <= 1639 and 242 <= coo_y <= 485:
-            hard_count += 1
-            if hard_count >= 50:
+            hard_count += 4
+            if hard_count >= 255:
                 if 1237 <= coo_x <= 1639 and 242 <= coo_y <= 485:
-                    level_list[2].set_alpha(255)
-                    level_list[0].set_alpha(50)
-                    level_list[1].set_alpha(50)
-                    hard_count = 0
+                    hard_count = 255
+                    difficulty_level = "hard"
         else:
-            hard_count = 0
+            if difficulty_level != "hard":
+                hard_count = 55
+
+        if 524 <= coo_x <= 1398 and 734 <= coo_y <= 1006:
+            start_count += 2
+            if start_count >= 200:
+                if 1237 <= coo_x <= 1639 and 242 <= coo_y <= 485:
+                    start_count = 255
+                    mode = "play"
+        else:
+            start_count -=8
+            if start_count <= 0:
+                start_count = 0
+
+
 
         screen.blit(menu_surface,(0,0))
         screen.blit(cursor_surface,(0,0))
@@ -550,7 +572,7 @@ while running:
 
                     mouse_x = int(screen_width * 0.8 * (player[0] - left_x) / (right_x - left_x) + screen_width * 0.1)
 
-                    print(f"横 :{left_x,player[0],right_x, mouse_x}")
+                    #print(f"横 :{left_x,player[0],right_x, mouse_x}")
                 except:
                     if count % 50 == 0:
                         print("eroDivisionError")
@@ -561,7 +583,7 @@ while running:
 
                     mouse_y = int(screen_height * 0.8 * (player[1] -  top_y) / (bottom_y - top_y) + screen_height * 0.1)
 
-                    print(f"縦 :{top_y,player[1],bottom_y, mouse_y}")
+                    #print(f"縦 :{top_y,player[1],bottom_y, mouse_y}")
                 except:
                     if count % 50 == 0:
                         print("eroDivisionError")
