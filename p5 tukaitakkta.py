@@ -19,19 +19,21 @@ pygame.init()
 
 # 2. ウィンドウのサイズを設定  あとでプロジェクターのサイズに要調整。
 
-screen_mode = input("画面モードを選択してください (0: 1280x720, 1: 1920x1080 フルスクリーン): ")
+mode_check = True
+while mode_check:
+    screen_mode = int(input("画面モードを選択してください (0: 1280x720, 1: 1920x1080 フルスクリーン): "))
+    
+    if screen_mode == 0:
+        screen_width = 1280
+        screen_height = 720
+        screen = pygame.display.set_mode((screen_width, screen_height))
+        mode_check = False
 
-if screen_mode == 0:
-    screen_width = 1280
-    screen_height = 720
-    screen = pygame.display.set_mode((screen_width, screen_height))
-
-if screen_mode == 1:
-    screen_width = 1920
-    screen_height = 1080
-    screen = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREEN | pygame.HWSURFACE)
- 
-
+    if screen_mode == 1:
+        screen_width = 1920
+        screen_height = 1080
+        screen = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREEN | pygame.HWSURFACE)
+        mode_check = False
 
 
 #pygameの中で使う変数の宣言
@@ -43,6 +45,7 @@ fps = 100#一秒間に起きる画面更新の回数
 
 split_varue = 20 #円が出てくるマス目の細かさ
 
+use_aruco = False #True:設定したarucoマーカを追尾　False:マウスカードルを追尾
 
 comment_size = 200#コメントのサイズを指定する
 comment_file_list = ["good.png"] #コメントのバリエーション
@@ -70,6 +73,8 @@ for filename in circle_file_list:
     scale = circle_size / image.get_width()
     newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
     circle_list.append(newimage)
+
+print(circle_list)
 
 game_point = 0
 
@@ -150,10 +155,10 @@ def backcolor(h,s,v):
 
     return r*255,g*255,b*255
 
-    #bpsh　「100秒間に～」の間隔 後で単位を調整したい　下のコメントチェック
+    #cps　「1秒間に～」の間隔 後で単位を調整したい　下のコメントチェック
 default_size = 50#最終円のサイズ指定
 class make_circle:
-    def __init__ (self,x,y,bps):
+    def __init__ (self,x,y,cps,circle_id):
         self.alive = True
         self.age = 0
         self.size = default_size * 4
@@ -161,16 +166,34 @@ class make_circle:
         self.clear = 0
         self.x = x
         self.y = y
-        self.bps = bps
+        self.cps = cps
         self.color = [255,255,255] #円の色の初期値
         self.move = True
+        self.circle_id = circle_id
         #self.lo = lo
 
         #print(f"self.bps  {self.bps}")
 
     
     def update(self):
-        temp = self.bps * fps
+        mouse_x = 0
+        mouse_y = 0
+        if use_aruco:
+            if self.circle_id == red_feet[2]:
+                mouse_x , mouse_y , id = red_feet
+
+            if self.circle_id == red_hand[2]:
+                mouse_x , mouse_y , id = red_hand
+        
+            if self.circle_id == blue_feet[2]:
+                mouse_x , mouse_y , id = blue_feet
+
+            if self.circle_id == blue_hand[2]:
+                mouse_x , mouse_y , id = blue_hand
+        else:
+            mouse_x , mouse_y = pygame.mouse.get_pos()
+
+        temp = self.cps * fps
 
         if self.move:#デフォルトサイズどうする?仮にsize 25とする
             sa = self.main_size - default_size
@@ -193,42 +216,31 @@ class make_circle:
                 self.age = 0
         else:
             global game_point
-            global del_target
 
             self.age += 1
             if self.age / (fps * 0.1) >= 1:
-                if self.clear >= 10:
-                    self.clear -= 200 / (fps * 0.1)
-                else:
-                    self.clear = 0
+                self.clear -= 200 / (fps * 0.1)
+                if self.clear <= 0:
+                    self.alive = False
 
             if self.alive:
                 if abs(self.x - mouse_x) <= default_size and abs(self.y - mouse_y ) <= default_size:
                     game_point += 1
                     print(game_point)
-                    #self.clear = 255
                     self.alive = False
                     new_comment = tap_comment(self.x,self.y,comment_list[random.randint(0,len(comment_list)-1)])
                     comment_q.append(new_comment)
-
-            if self.clear == 0:
-                for i in range(len(circles)):
-                    if circles[i] == self:
-                        del_target_circle = i
                 
 
     def draw(self):
-
-        #print(f"self_clear  {self.clear}")
         r,g,b = self.color
         
-        #circle_surface.fill((0,0,0,0))
         #外周円
         pygame.draw.circle(circle_surface,(r,g,b,self.clear),(self.x,self.y),self.size)
         pygame.draw.circle(circle_surface,(r,g,b,0),(self.x,self.y),self.size - 4)
+
         #内周円
-        pygame.draw.circle(circle_surface,(max(0,r-9),max(0,g-64),max(0,b-67),self.clear),(self.x,self.y),default_size)
-        #pygame.draw.circle(circle_surface,(0,0,0),(self.x,self.y),default_size)
+        screen.blit(circle_list[self.circle_id], (self.x - 80, self.y - 50))
 
 class tap_comment:
 
@@ -265,12 +277,6 @@ def change_x(A, B, now):
     now_X, now_y = now
 
     return ((x1 - x2) / (y1 - y2)) * (now_y-y1) + x1
-    #try:
-    #     result = x1 + (now_y - y1) * (x1 - x2) / now_y
-    #     return result
-    # except ZeroDivisionError:
-    #     # A と B が水平線上にある場合のフォールバック
-    #     return (x1 + x2) / 2
 
 def change_y(A, B, now):
     x1, y1 = A
@@ -278,17 +284,8 @@ def change_y(A, B, now):
     now_x, now_y = now
 
     return ((y1 - y2) / (x1 - x2)) * (now_x - x1) + y1
+    
 
-
-
-    # try:
-    #     result = y1 + now_x * ((y1 - y2) * (x1 - x2)) - ((y1 - y2) / (x1 , x2) * x1)
-    #     return result
-    # except ZeroDivisionError:
-    #     # A と B が垂直線上にある場合のフォールバック
-    #     return (y1 + y2) / 2
-
-#ここ4x4だよ！画像4x4にしたんでしょ？って言われるかもね。　　　　　　↓
 aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
 aruco_params = cv2.aruco.DetectorParameters()
 aruco_detector = cv2.aruco.ArucoDetector(aruco_dict, aruco_params)
@@ -332,54 +329,54 @@ while running:
 
     pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
 
+    if count % 5 == 0:
+        ret, frame = cap.read()
+        if ret:
+            markers, ids, rejected = aruco_detector.detectMarkers(frame)
+            #print(ids)
 
-    ret, frame = cap.read()
-    if ret:
-        markers, ids, rejected = aruco_detector.detectMarkers(frame)
-        #print(ids)
+            for i in range(len(markers)):
+                ID = ids[i]
+                C1 = markers[i][0][0]
+                C2 = markers[i][0][1]
+                C3 = markers[i][0][2]
+                C4 = markers[i][0][3]
+                #ave[x,y]
+                ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
 
-        for i in range(len(markers)):
-            ID = ids[i]
-            C1 = markers[i][0][0]
-            C2 = markers[i][0][1]
-            C3 = markers[i][0][2]
-            C4 = markers[i][0][3]
-            #ave[x,y]
-            ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
+                #print(ID)
 
-            #print(ID)
+                if ID == 1:
+                    left_top = ave
+                    pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
+                    #print(left_top)
 
-            if ID == 1:
-                left_top = ave
-                pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
-                #print(left_top)
+                if ID == 2:
+                    right_top = ave
+                    pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.9),int(screen_height * 0.1)), 30)
+                    #print(right_top)
 
-            if ID == 2:
-                right_top = ave
-                pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.9),int(screen_height * 0.1)), 30)
-                #print(right_top)
+                if ID == 3:
+                    right_bottom = ave
+                    pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.9),int(screen_height * 0.9)), 30)
+                    #print(right_bottom)
 
-            if ID == 3:
-                right_bottom = ave
-                pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.9),int(screen_height * 0.9)), 30)
-                #print(right_bottom)
+                if ID == 4:
+                    left_bottom = ave
+                    pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
+                    #print(left_bottom)
 
-            if ID == 4:
-                left_bottom = ave
-                pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
-                #print(left_bottom)
+                if ID == 5:
+                    red_feet = player_chege_point(ave),5
 
-            if ID == 5:
-                player_red_feet = ave,5
+                if ID == 6:
+                    red_hand = player_chege_point(ave),6
 
-            if ID == 6:
-                player_red_hand = ave,6
+                if ID == 7:
+                    blue_feet = player_chege_point(ave),7
 
-            if ID == 7:
-                player_blue_feet = ave,7
-
-            if ID == 8:
-                player_blue_hand = ave,8
+                if ID == 8:
+                    blue_hand = player_chege_point(ave),8
 
     # 5. イベント処理
     
@@ -417,35 +414,32 @@ while running:
     #     print(f"left_bottom:{left_bottom}")
 
     #     print(f"player:{player}")
+    def player_chege_point(player):
+        if use_aruco:
 
-    try:
-        left_x = change_x(left_top,left_bottom,player)
-        right_x = change_x(right_top,right_bottom,player)
+            try:
+                left_x = change_x(left_top,left_bottom,player)
+                right_x = change_x(right_top,right_bottom,player)
 
-        mouse_x = int(screen_width * 0.9 * (player[0] - left_x) / (right_x - left_x) + screen_width * 0.05)
+                mouse_x = int(screen_width * 0.8 * (player[0] - left_x) / (right_x - left_x) + screen_width * 0.1)
 
-        print(f"横 :{left_x,player[0],right_x, mouse_x}")
-    except:
-        if count % 50 == 0:
-            print(ZeroDivisionError)
-        
-    try:
-        top_y = change_y(left_top,right_top,player)
-        bottom_y = change_y(left_bottom,right_bottom,player)
+                print(f"横 :{left_x,player[0],right_x, mouse_x}")
+            except:
+                if count % 50 == 0:
+                    print("eroDivisionError")
+                
+            try:
+                top_y = change_y(left_top,right_top,player)
+                bottom_y = change_y(left_bottom,right_bottom,player)
 
-        mouse_y = int(screen_height * 0.9 * (player[1] -  top_y) / (bottom_y - top_y) + screen_height * 0.05)
+                mouse_y = int(screen_height * 0.8 * (player[1] -  top_y) / (bottom_y - top_y) + screen_height * 0.1)
 
-        print(f"縦 :{top_y,player[1],bottom_y, mouse_y}")
-    except:
-        if count % 50 == 0:
-            print(ZeroDivisionError)
+                print(f"縦 :{top_y,player[1],bottom_y, mouse_y}")
+            except:
+                if count % 50 == 0:
+                    print("eroDivisionError")
 
-
-
-    #print(mouse_x)
-    #print(mouse_y)
-
-
+            return mouse_x , mouse_y
 
 
     #背景がゲーミングになる設定 今は使ってない。
@@ -456,12 +450,12 @@ while running:
 
 
     #実験用のマウス追従円
-    new_cursor = cursor((mouse_x,mouse_y))
-    cursor_list.append(new_cursor)
-    for i in cursor_list:
-        i.draw()
-    if len(cursor_list) > 10:
-        cursor_list = cursor_list[-4:]
+    # new_cursor = cursor((mouse_x,mouse_y))
+    # cursor_list.append(new_cursor)
+    # for i in cursor_list:
+    #     i.draw()
+    # if len(cursor_list) > 10:
+    #     cursor_list = cursor_list[-4:]
 
 
 
@@ -473,7 +467,7 @@ while running:
         while abs(new_circle_x - last_circle_x) <= split_screen_x * 5 and abs(new_circle_y - last_circle_y) <= split_screen_y * 5:
             new_circle_x = random.randint(edge_range,split_varue - edge_range) * split_screen_x
             new_circle_y = random.randint(edge_range,split_varue - edge_range) * split_screen_y
-        new_circle = make_circle(new_circle_x,new_circle_y,3)
+        new_circle = make_circle(new_circle_x,new_circle_y,3,len(circle_list))
         circles.append(new_circle)
         last_circle_x = new_circle_x
         last_circle_y = new_circle_y
@@ -493,32 +487,36 @@ while running:
     #丸を描画する
     
 
-    # 6. 画面の更新
+    # 6. surface の描画
+
+
+    #print(len(comment_q))
+
+    
+    screen.blit(backcolor_surface,(0,0))
+    
+    screen.blit(check_surface,(0,0))
+
+    alive_circles = []
     for i in circles:
+        if i.alive:
+            alive_circles.append(i)
+            
+    for i in alive_circles:
         i.update()
         i.draw()
 
-    #print(len(comment_q))
     for i in comment_q:
         i.update()
         i.draw()
-
-    if del_target_circle != "nan":
-        del circles[del_target]
-        del_target = "nan"
-
-    if del_target_comment != "nan":
-        #print()
-        del comment_q[del_target_comment]
-        del_target_comment = "nan"
     
-    screen.blit(backcolor_surface,(0,0))
-    screen.blit(comment_surface,(0,0))
     screen.blit(circle_surface,(0,0))
-    screen.blit(cursor_surface,(0,0))
-    screen.blit(check_surface,(0,0))
+    
+    screen.blit(comment_surface,(0,0))
 
-    pygame.display.update() # または pygame.display.update
+    screen.blit(cursor_surface,(0,0))
+
+    pygame.display.update() 
 
     #fpsの値を設定
     clock.tick(fps)
