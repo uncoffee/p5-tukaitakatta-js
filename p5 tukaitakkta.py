@@ -145,10 +145,32 @@ check_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
 cursor_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
 cursor_list = []
 
+left_top = (0,0)
+right_top = (0,0)
+right_bottom = (0,0)
+left_bottom = (0,0)
+red_feet = (0,0,0)
+red_hand = (0,0,0)
+blue_feet = (0,0,0)
+blue_hand = (0,0,0)
+
+
+def spotlight(point):
+    new_cursor = cursor(point)
+    cursor_list.append(new_cursor)
+    cursor_alive_list = []
+    for i in cursor_list:
+        i.draw()
+        if i.alive:
+            cursor_alive_list.append(i)
+    
+    cursor_list = cursor_alive_list
+
 class cursor:
-    def __init__(self,cursor_point,):
+    def __init__(self,cursor_point):
         self.x,self.y = cursor_point
         self.clear = 200
+        self.alive = True
 
     def draw(self):
         if self.clear == 0:
@@ -157,7 +179,7 @@ class cursor:
         pygame.draw.circle(cursor_surface,(255,255,255,self.clear),(self.x,self.y),25)
         self.clear -= 100
         if self.clear <= 0:
-            self.clear = 0
+            self.alive = False
 
 def random_color():
     return (random.randint(0,255),random.randint(0,255),random.randint(0,255))
@@ -184,7 +206,7 @@ class make_circle:
     def __init__ (self,x,y,cps,circle_id):
         self.alive = True
         self.age = 0
-        self.size = default_size * 4
+        self.size = default_size * 8
         self.main_size = self.size
         self.clear = 0
         self.x = x
@@ -289,6 +311,34 @@ class tap_comment:
                 if self in comment_q:
                     comment_q.remove(self)
 
+def coordinate():
+    if use_aruco:
+        ret, frame = cap.read()
+        if ret:
+            markers, ids, rejected = aruco_detector.detectMarkers(frame)
+            
+            for i in range(len(markers)):
+                ID = ids[i]
+                C1 = markers[i][0][0]
+                C2 = markers[i][0][1]
+                C3 = markers[i][0][2]
+                C4 = markers[i][0][3]
+
+                #ave[x,y]
+                ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
+                
+                if ID == 5:
+                    red_feet = player_chege_point(ave),5
+                if ID == 6:
+                    red_hand = player_chege_point(ave),6
+                if ID == 7:
+                    blue_feet = player_chege_point(ave),7
+                if ID == 8:
+                    blue_hand = player_chege_point(ave),8
+        return red_feet,red_hand,blue_feet,blue_hand
+    else:
+        return pygame.mouse.get_pos(),pygame.mouse.get_pos()
+
 
 
 clock = pygame.time.Clock()
@@ -321,10 +371,16 @@ right_bottom = ()
 left_bottom = ()
 player = ()
 
-ret, frame = cap.read()
-while ret != True:
-    print("カメラつながってない")
+if use_aruco:
     ret, frame = cap.read()
+    while ret != True:
+        print("カメラが接続されていません。")
+        ret, frame = cap.read()
+
+    print("カメラの接続が確認されました。")
+else:
+    print("現在の設定ではuse_arucoはFalseです。")
+    print("カメラを使用せずに開始します。")
 
 
 # 4. ゲームループ
@@ -420,7 +476,7 @@ while running:
 
                         if ids in 1 and ids in 2 and ids in 3 and ids in 4 and (ids in 5 or ids in 6 or ids in 7 or ids in 8):
                             check_count += 1
-                            if check_count >= 100:
+                            if check_count >= 300:
                                 if ids in 1 and ids in 2 and ids in 3 and ids in 4 and (ids in 5 or ids in 6 or ids in 7 or ids in 8):
                                     mode = "menu"
                                     cv2.destroyAllWindows()
@@ -433,13 +489,58 @@ while running:
             mode = "menu"
 
     if mode == "menu":
+        
+        count += 1
+        if count % 5 == 0:
+            coo = coordinate()
+            spotlight(coo[0])
+            coo_x,coo_y = coo[0] #red_feet or mouse
+
         screen.blit(game_level_frame, ((screen_width / 2) - 900,(screen_height / 2) - 500))
-        screen.blit(level_list[0], ((screen_width * 3 / 12) -300.0,(screen_height / 3) - 166.66666666666669))
-        screen.blit(level_list[1], ((screen_width * 6 / 12) -300.0,(screen_height / 3) - 166.66666666666669))
-        screen.blit(level_list[2], ((screen_width * 9 / 12) -300.0,(screen_height / 3) - 166.66666666666669))
+        screen.blit(level_list[0], ((screen_width * 3 / 12) -300.0,(screen_height / 3) - 167))
+        screen.blit(level_list[1], ((screen_width * 6 / 12) -300.0,(screen_height / 3) - 167))
+        screen.blit(level_list[2], ((screen_width * 9 / 12) -300.0,(screen_height / 3) - 167))
 
+        if 277 <= coo_x <= 679 and 405 >= coo_y >= 315:
+            easy_count += 1
+            if easy_count >= 100:
+                if 275 <= coo_x <= 792 and 405 >= coo_y >= 315:
+                    level_list[0].set_alpha(255)
+                    level_list[1].set_alpha(50)
+                    level_list[2].set_alpha(50)
+                    easy_count = 0
+        else:
+            easy_count -= 1
+            if easy_count <= 0:
+                easy_count = 0
 
+        if 757 <= coo_x <= 1159 and 405 >= coo_y >= 315:
+            normal_count += 1
+            if normal_count >= 100:
+                if 275 <= coo_x <= 792 and 405 >= coo_y >= 315:
+                    level_list[1].set_alpha(255)
+                    level_list[2].set_alpha(50)
+                    level_list[0].set_alpha(50)
+                    normal_count = 0
+        else:
+            normal_count -= 1
+            if normal_count <= 0:
+                normal_count = 0
 
+        if 1237 <= coo_x <= 1639 and 405 >= coo_y >= 315:
+            hard_count += 1
+            if hard_count >= 100:
+                if 275 <= coo_x <= 792 and 405 >= coo_y >= 315:
+                    level_list[2].set_alpha(255)
+                    level_list[0].set_alpha(50)
+                    level_list[1].set_alpha(50)
+                    hard_count = 0
+        else:
+            hard_count -= 1
+            if hard_count <= 0:
+                hard_count = 0
+
+            
             
     if mode =="play":
         #fpsフレーム数の取得 clock.get_fps()
@@ -475,27 +576,6 @@ while running:
                         print("eroDivisionError")
 
                 return mouse_x , mouse_y
-
-
-        #背景がゲーミングになる設定 今は使ってない。
-        if count % 4 == 0:
-            color_count += 1
-            if color_count >= 100:
-                color_count = 0
-
-
-        #実験用のマウス追従円
-        # new_cursor = cursor((mouse_x,mouse_y))
-        # cursor_list.append(new_cursor)
-        # for i in cursor_list:
-        #     i.draw()
-        # if len(cursor_list) > 10:
-        #     cursor_list = cursor_list[-4:]
-
-
-
-
-
 
         #円の座標を設定する
         if  count % 400 == 0 :
