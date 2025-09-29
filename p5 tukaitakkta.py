@@ -240,7 +240,7 @@ class make_circle:
         pygame.draw.circle(circle_surface,(r,g,b,0),(self.x,self.y),self.size - 4)
 
         #内周円
-        screen.blit(circle_list[self.circle_id], (self.x - 80, self.y - 50))
+        screen.blit(circle_list[self.circle_id], (self.x - 90, self.y - 50))
 
 class tap_comment:
 
@@ -467,7 +467,7 @@ while running:
         while abs(new_circle_x - last_circle_x) <= split_screen_x * 5 and abs(new_circle_y - last_circle_y) <= split_screen_y * 5:
             new_circle_x = random.randint(edge_range,split_varue - edge_range) * split_screen_x
             new_circle_y = random.randint(edge_range,split_varue - edge_range) * split_screen_y
-        new_circle = make_circle(new_circle_x,new_circle_y,3,len(circle_list))
+        new_circle = make_circle(new_circle_x,new_circle_y,3,len(circle_list) - 1)
         circles.append(new_circle)
         last_circle_x = new_circle_x
         last_circle_y = new_circle_y
