@@ -38,9 +38,9 @@ pygame.init()
 
 #pygameの中で使う変数の宣言
 
-screen_width = 1920 * 8
-screen_height = 1080 * 8
-screen = pygame.display.set_mode((screen_width, screen_height))
+screen_width = 1920
+screen_height = 1080
+screen = pygame.display.set_mode((screen_width, screen_height),pygame.HWSURFACE)
 
 
 #変更可
@@ -77,7 +77,7 @@ for filename in circle_file_list:
     newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
     circle_list.append(newimage)
 
-game_mode = "set"
+mode = "set"
 
 game_point = 0
 
@@ -133,7 +133,6 @@ class cursor:
     def draw(self):
         if self.clear == 0:
             return
-        #cursor_surface.fill((0,0,0,0))
         #print(self.x , self.y)
         pygame.draw.circle(cursor_surface,(255,255,255,self.clear),(self.x,self.y),25)
         self.clear -= 100
@@ -197,12 +196,11 @@ class make_circle:
         else:
             mouse_x , mouse_y = pygame.mouse.get_pos()
 
-        temp = self.cps * fps
-
         if self.move:#デフォルトサイズどうする?仮にsize 25とする
             sa = self.main_size - default_size
-            #temp = self.bps * fps
-            #print(f"temp  {temp}")
+
+            temp = self.bps * fps
+
             if self.size >= default_size:
                 self.size -= sa / temp
             else:
@@ -330,8 +328,8 @@ while running:
     comment_surface.fill((0,0,0,0))
     cursor_surface.fill((0,0,0,0))
 
-    if use_aruco == True:
-        if game_mode == "set":
+    if use_aruco:
+        if mode == "set":
             count += 1
 
             pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
@@ -344,15 +342,15 @@ while running:
 
             if count % 5 == 0:
 
-                check_surface.fill((0,0,0,0))
                 ret, frame = cap.read()
 
                 cv2.imshow('check_window', frame)
+
+
                 
                 if ret:
                     markers, ids, rejected = aruco_detector.detectMarkers(frame)
-                    #print(ids)
-
+                    
                     for i in range(len(markers)):
                         ID = ids[i]
                         C1 = markers[i][0][0]
@@ -386,30 +384,27 @@ while running:
 
                         if ID == 5:
                             red_feet = player_chege_point(ave),5
-                            screen.blit(circle_list[0], ((screen_width * 4 // 9) + 90,(screen_height * 1 // 9) + 50))
+                            check_surface.blit(circle_list[0], ((screen_width * 4 // 9) + 90,(screen_height * 1 // 9) - 50))
 
                         if ID == 6:
                             red_hand = player_chege_point(ave),6
-                            screen.blit(circle_list[1], ((screen_width * 4 // 9) + 90,(screen_height * 2 // 9) + 50))
+                            check_surface.blit(circle_list[1], ((screen_width * 4 // 9) + 90,(screen_height * 2 // 9) - 50))
 
                         if ID == 7:
                             blue_feet = player_chege_point(ave),7
-                            screen.blit(circle_list[2], ((screen_width * 5 // 9) + 90,(screen_height * 1 // 9) + 50))
+                            check_surface.blit(circle_list[2], ((screen_width * 5 // 9) + 90,(screen_height * 1 // 9) - 50))
 
                         if ID == 8:
                             blue_hand = player_chege_point(ave),8
-                            screen.blit(circle_list[3], ((screen_width * 5 // 9) + 90,(screen_height * 2 // 9) + 50))
-                            
-                        screen.blit(circle_list[0], ((screen_width * 4 // 9) + 90,(screen_height * 1 // 9) + 50))
+                            check_surface.blit(circle_list[3], ((screen_width * 5 // 9) + 90,(screen_height * 2 // 9) - 50))
 
-                        screen.blit(circle_list[1], ((screen_width * 4 // 9) + 90,(screen_height * 2 // 9) + 50))
+                        if ids in 1 and ids in 2 and ids in 3 and ids in 4 and (ids in 5 or ids in 6 or ids in 7 or ids in 8):
+                            mode = "menu"
 
-                        screen.blit(circle_list[2], ((screen_width * 5 // 9) + 90,(screen_height * 1 // 9) + 50))
-
-                        screen.blit(circle_list[3], ((screen_width * 5 // 9) + 90,(screen_height * 2 // 9) + 50))
+            screen.blit(check_surface,(0,0))
 
             
-    if game_mode =="play":
+    if mode =="play":
         #fpsフレーム数の取得 clock.get_fps()
 
         #総フレーム数（カウント
@@ -474,31 +469,11 @@ while running:
             circles.append(new_circle)
             last_circle_x = new_circle_x
             last_circle_y = new_circle_y
-            #print(new_circle_x)
-            #print(new_circle_y)
-
-            count = 0
-
-        #geming背景にしたい 曲のリズムに合わせて変えたい
-        if count % 2 == 0:
-            colors = backcolor(color_count % 100,50,50)
-            backcolor_surface.fill((0,0,0,150))
-            
-            #backcolor_surface.fill((colors[0],colors[1],colors[2],200))
             
 
-        #丸を描画する
-        
-
-        # 6. surface の描画
-
-
-        #print(len(comment_q))
-
+        #surface の描画
         
         screen.blit(backcolor_surface,(0,0))
-        
-        screen.blit(check_surface,(0,0))
 
         alive_circles = []
         for i in circles:
@@ -519,7 +494,7 @@ while running:
 
         screen.blit(cursor_surface,(0,0))
 
-        pygame.display.update() 
+    pygame.display.update() 
 
 # 7. Pygame の終了処理
 pygame.quit()
