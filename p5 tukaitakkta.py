@@ -607,7 +607,7 @@ while running:
         else:
             coo = pygame.mouse.get_pos()
             
-        coo_x,coo_y,coo_id= coo
+        coo_x,coo_y= coo
  
         spotlight(red_feet)
 
