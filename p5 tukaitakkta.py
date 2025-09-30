@@ -498,7 +498,7 @@ while running:
                         if four_point_count >= 57:
                             four_point = True
 
-                        if red_feet_count >= 24:
+                        if red_feet_count >= 40:
                             red_feet = True
 
                         if four_point and red_feet:
@@ -514,8 +514,10 @@ while running:
                         for i in ids:
                             if i <= 4:
                                 four_point_count += 1 #四隅の点
-                            if i >= 5:
-                                red_feet_count += 1 #赤足
+                            if i == 5:
+                                red_feet_count += 3 #赤足がないとバグるから。
+                            if i >= 6:
+                                red_feet_count += 1 #その他の判定（おまけ
                     
                     for i in range(len(markers)):
                         ID = ids[i]
@@ -570,13 +572,19 @@ while running:
             mode = "menu"
 
     if mode == "menu":
+        coordinate()
                 
         count += 1
         if count % 5 == 0:
-            coo = coordinate()
-            print(coo)
-            coo_x,coo_y = coo[0] #red_feet or mouse
-        spotlight(coo[0])
+            if use_aruco:
+                coo = red_feet
+            else:
+                coo = pygame.mouse.get_pos()
+            
+            coo_x,coo_y = coo
+ 
+ #red_feet or mouse
+        spotlight(coo)
 
         level_list[0].set_alpha(easy_count)
         level_list[1].set_alpha(normal_count)
