@@ -82,6 +82,7 @@ for filename in circle_file_list:
     scale = circle_size / image.get_width()
     newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
     circle_list.append(newimage)
+print(len(circle_list))
 
 for filename in level_file_list:
     image = pygame.image.load(filename)
@@ -150,7 +151,7 @@ pygame.display.set_caption("デジタル体育")
 
 menu_surface = pygame.Surface((screen_width,screen_height), pygame.SRCALPHA)
 
-backcolor_surface = pygame.Surface((screen_width,screen_height), pygame.SRCALPHA)
+effect_surface = pygame.Surface((screen_width,screen_height), pygame.SRCALPHA)
 
 circle_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
 
@@ -241,6 +242,18 @@ class make_circle:
 
             if self.circle_id == blue_hand[2]:
                 mouse_x , mouse_y , id = blue_hand
+            
+            new_effect_circle = effect_circle(mouse_x,mouse_y)
+            effect_circle_list.append(new_effect_circle)
+            alive_effect_circle_list = []
+            for i in effect_circle_list:
+                if i.alive:
+                    alive_effect_circle_list.append(i)
+
+            for i in alive_effect_circle_list:
+                i.draw()
+            
+
         else:
             mouse_x , mouse_y = pygame.mouse.get_pos()
 
@@ -371,7 +384,22 @@ def player_chege_point(player):
 
         return mouse_x , mouse_y
 
+effect_circle_list = []
 
+class effect_circle:
+    def __init__(self,x,y):
+        self.x = x
+        self.y = y
+        self.clear = 200
+        self.alive = True
+        spotlight(x,y)
+    
+    def draw(self):
+        pygame.draw.circle(effect_surface,(random_color(),self.clear),(self.x,self.y),50)
+        self.clear -= 10
+        if self.clear <= 0:
+            self.clear = 0
+            self.alive = False
 
 clock = pygame.time.Clock()
 
@@ -431,7 +459,7 @@ while running:
 
     #描写のリセット
     screen.fill((50,50,50))
-    backcolor_surface.fill((0,0,0,0))
+    effect_surface.fill((0,0,0,255 // 20))
     circle_surface.fill((0,0,0,0))
     comment_surface.fill((0,0,0,0))
     cursor_surface.fill((0,0,0,0))
@@ -605,29 +633,21 @@ while running:
             
             
     if mode =="play":
-        #fpsフレーム数の取得 clock.get_fps()
-
         #総フレーム数（カウント
         count += 1
-
-        #マウスの位置を人がいる位置に置き換えるプログラム（日本語はもともとおかしいわ！
-
-
 
         #円の座標を設定する
         if  count % (circle_time * 125) == 0:
             while abs(new_circle_x - last_circle_x) <= split_screen_x * 5 and abs(new_circle_y - last_circle_y) <= split_screen_y * 5:
                 new_circle_x = random.randint(edge_range,split_varue - edge_range) * split_screen_x
                 new_circle_y = random.randint(edge_range,split_varue - edge_range) * split_screen_y
-            new_circle = make_circle(new_circle_x,new_circle_y,circle_time,len(circle_list) - 1)
+            new_circle = make_circle(new_circle_x,new_circle_y,circle_time,random.randint(0,len(circle_list) - 1))
             circles.append(new_circle)
             last_circle_x = new_circle_x
             last_circle_y = new_circle_y
-            
 
-        #surface の描画
-        
-        screen.blit(backcolor_surface,(0,0))
+        #surfaceの描画
+        screen.blit(effect_surface,(0,0))
 
         alive_circles = []
         for i in circles:
