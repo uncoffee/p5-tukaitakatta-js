@@ -39,7 +39,7 @@ pygame.init()
 
 screen_width = 1920
 screen_height = 1080
-screen = pygame.display.set_mode((screen_width, screen_height),pygame.FULLSCREEN | pygame.HWSURFACE)
+screen = pygame.display.set_mode((screen_width, screen_height),pygame.FULLSCREEN  | pygame.SCALED | pygame.HWSURFACE)
 
 
 #変更可
@@ -86,13 +86,13 @@ for filename in circle_file_list:
 for filename in level_file_list:
     image = pygame.image.load(filename)
     scale = level_size / image.get_width()
-    newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
+    newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale)) 
     level_list.append(newimage)
 
 for filename in start_button_file_list:
     image = pygame.image.load(filename)
     scale = 1000 / image.get_width()
-    newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
+    newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale)) 
     start_button_list.append(newimage)
 
 image = pygame.image.load("level_frame.png")
@@ -133,7 +133,7 @@ comment_y = 0
 comment_text = ""
 comment_q = []
 
-coo = (0,0),0
+coo = ()
 coo_x = 0
 coo_y = 0
 
@@ -186,7 +186,7 @@ if mode == "play":
 
 
 def spotlight(point):
-    x , y = point
+    x , y , id = point
     pygame.draw.circle(cursor_surface,(255,255,255,200),(x,y),25)
 
 def random_color():
@@ -232,16 +232,16 @@ class make_circle:
         mouse_x = 0
         mouse_y = 0
         if use_aruco:
-            if self.circle_id == red_feet[2]:
+            if self.circle_id + 5 == red_feet[2]:
                 mouse_x , mouse_y , id = red_feet
 
-            if self.circle_id == red_hand[2]:
+            if self.circle_id + 5 == red_hand[2]:
                 mouse_x , mouse_y , id = red_hand
         
-            if self.circle_id == blue_feet[2]:
+            if self.circle_id + 5 == blue_feet[2]:
                 mouse_x , mouse_y , id = blue_feet
 
-            if self.circle_id == blue_hand[2]:
+            if self.circle_id + 5 == blue_hand[2]:
                 mouse_x , mouse_y , id = blue_hand
 
         else:
@@ -333,23 +333,44 @@ def coordinate():
 
                 #ave[x,y]
                 ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
-                
-                if ID == 5:
-                    red_feet = player_chege_point(ave),5
-                if ID == 6:
-                    red_hand = player_chege_point(ave),6
-                if ID == 7:
-                    blue_feet = player_chege_point(ave),7
-                if ID == 8:
-                    blue_hand = player_chege_point(ave),8
 
-        return red_feet,red_hand,blue_feet,blue_hand
+                x,y = player_chege_point(ave)
+                if ID == 1:
+                    global left_top
+                    left_top = ave
+                    print(left_top)
+                if ID == 2:
+                    global right_top
+                    right_top = ave
+                    print(right_top)
+                if ID == 3:
+                    global right_bottom
+                    right_bottom = ave
+                    print(right_bottom)
+                if ID == 4:
+                    global left_bottom
+                    left_bottom = ave
+                    print(left_bottom) 
+                if ID == 6:
+                    global red_feet
+                    red_feet = x,y,6
+                    print(f"目印{red_feet}")
+                if ID == 8:
+                    global red_hand
+                    red_hand = x,y,8
+                if ID == 5:
+                    global blue_feet
+                    blue_feet = x,y,5
+                if ID == 7:
+                    global blue_hand
+                    blue_hand = x,y,7
+
     else:
         return pygame.mouse.get_pos(),pygame.mouse.get_pos(),pygame.mouse.get_pos(),pygame.mouse.get_pos()
 
 def player_chege_point(player):
-    mouse_y = 0,0
-    mouse_x = 0,0
+    mouse_y = 0
+    mouse_x = 0
     if use_aruco:
 
         try:
@@ -482,26 +503,28 @@ while running:
                 frame = numpy.rot90(frame) 
                 opencv_cap_surface = pygame.surfarray.make_surface(frame)
                 screen.blit(opencv_cap_surface,(screen_width / 2 - 340,screen_height * 2 / 3 - 204))
-                pygame.display.flip()
+                
 
                 if count % 5 == 0:
+                    coordinate()
                     if count == 5:
+                        
                         four_point_count = 0
-                        red_feet_count = 0
+                        player_check_count = 0
                         four_point = False
-                        red_feet = False
+                        player_check = False
 
                     if count % 100 == 0:
                         print(four_point_count)
-                        print(red_feet_count)
+                        print(player_check_count)
 
-                        if four_point_count >= 57:
+                        if four_point_count >= 150:
                             four_point = True
 
-                        if red_feet_count >= 40:
-                            red_feet = True
+                        if player_check_count >= 40:
+                            player_check = True
 
-                        if four_point and red_feet:
+                        if four_point == True and player_check == True:
                             mode = "menu"
 
                         count_check_most = 0
@@ -515,9 +538,9 @@ while running:
                             if i <= 4:
                                 four_point_count += 1 #四隅の点
                             if i == 5:
-                                red_feet_count += 3 #赤足がないとバグるから。
+                                player_check_count += 3 #赤足がないとバグるから。
                             if i >= 6:
-                                red_feet_count += 1 #その他の判定（おまけ
+                                player_check_count += 1 #その他の判定（おまけ
                     
                     for i in range(len(markers)):
                         ID = ids[i]
@@ -531,39 +554,43 @@ while running:
                         #print(ID)
 
                         if ID == 1:
+
                             left_top = ave
                             pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
                             #print(left_top)
 
                         if ID == 2:
+
                             right_top = ave
                             pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.9),int(screen_height * 0.1)), 30)
                             #print(right_top)
 
                         if ID == 3:
+
                             right_bottom = ave
                             pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.9),int(screen_height * 0.9)), 30)
                             #print(right_bottom)
 
                         if ID == 4:
+
                             left_bottom = ave
                             pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
                             #print(left_bottom)
 
                         if ID == 5:
-                            red_feet = player_chege_point(ave),5
+
                             check_surface.blit(circle_list[0], ((screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50))
 
                         if ID == 6:
-                            red_hand = player_chege_point(ave),6
+
                             check_surface.blit(circle_list[1], ((screen_width * 4 // 9) - 90,(screen_height * 2 // 9) - 50))
 
                         if ID == 7:
-                            blue_feet = player_chege_point(ave),7
+
                             check_surface.blit(circle_list[2], ((screen_width * 5 // 9) - 90,(screen_height * 1 // 9) - 50))
 
                         if ID == 8:
-                            blue_hand = player_chege_point(ave),8
+
                             check_surface.blit(circle_list[3], ((screen_width * 5 // 9) - 90,(screen_height * 2 // 9) - 50))
 
             screen.blit(check_surface,(0,0))
@@ -572,19 +599,17 @@ while running:
             mode = "menu"
 
     if mode == "menu":
-        coordinate()
-                
+
         count += 1
-        if count % 5 == 0:
-            if use_aruco:
-                coo = red_feet
-            else:
-                coo = pygame.mouse.get_pos()
+        if use_aruco:
+            coo = red_feet
+            print(f"coo{coo}")
+        else:
+            coo = pygame.mouse.get_pos()
             
-            coo_x,coo_y = coo
+        coo_x,coo_y,coo_id= coo
  
- #red_feet or mouse
-        spotlight(coo)
+        spotlight(red_feet)
 
         level_list[0].set_alpha(easy_count)
         level_list[1].set_alpha(normal_count)
@@ -656,6 +681,8 @@ while running:
 
         screen.blit(menu_surface,(0,0))
         screen.blit(cursor_surface,(0,0))
+        if count % 5 == 0:
+            coordinate()
 
 
             
@@ -665,8 +692,8 @@ while running:
         count += 1
 
         if count % 150 == 0:
-            re_f,re_h,bl_f,bl_h = coordinate()
-            for i in [re_f,bl_f]:
+            coordinate()
+            for i in [red_feet,blue_feet]:
                 new_effect_circle = effect_circle(i[0],i[1])
                 effect_circle_list.append(new_effect_circle)
 
@@ -679,6 +706,7 @@ while running:
         effect_circle_list = alive_effect_circle_list
         for i in effect_circle_list:
             i.draw()
+            
         #円の座標を設定する
         if  count % (circle_time * 125) == 0:
             while abs(new_circle_x - last_circle_x) <= split_screen_x * 5 and abs(new_circle_y - last_circle_y) <= split_screen_y * 5:

@@ -1,16 +1,15 @@
 {
-    "editor.acceptSuggestionOnCommitCharacter": false,
-    // "editor.quickSuggestions": {
-    //     "other": "off"
-    // },
-    // "editor.suggestOnTriggerCharacters": false
+    "editor.acceptSuggestionOnCommitCharacter": true,
     "editor.quickSuggestions": {
-        "comments": "off",
-        "strings": "off",
-        "other": "off"
+        "other": "on", 
     },
-    "editor.suggestOnTriggerCharacters": false,
-    "editor.parameterHints.enabled": false,
-    "editor.wordBasedSuggestions": "off",
-    "editor.inlineSuggest.enabled": false
+    "editor.suggestOnTriggerCharacters": false
+    // "editor.quickSuggestions": {
+    //     "comments": "off",
+    //     "strings": "off"
+    // },
+    // "editor.suggestOnTriggerCharacters": false,
+    // "editor.parameterHints.enabled": false,
+    // "editor.wordBasedSuggestions": "off",
+    // "editor.inlineSuggest.enabled": false
 }
