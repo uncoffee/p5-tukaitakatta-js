@@ -242,17 +242,6 @@ class make_circle:
 
             if self.circle_id == blue_hand[2]:
                 mouse_x , mouse_y , id = blue_hand
-            
-            new_effect_circle = effect_circle(mouse_x,mouse_y)
-            effect_circle_list.append(new_effect_circle)
-            alive_effect_circle_list = []
-            for i in effect_circle_list:
-                if i.alive:
-                    alive_effect_circle_list.append(i)
-
-            for i in alive_effect_circle_list:
-                i.draw()
-            
 
         else:
             mouse_x , mouse_y = pygame.mouse.get_pos()
@@ -292,7 +281,6 @@ class make_circle:
                     new_comment = tap_comment(self.x,self.y,comment_list[random.randint(0,len(comment_list)-1)])
                     comment_q.append(new_comment)
                 
-
     def draw(self):
         r,g,b = self.color
         
@@ -390,12 +378,16 @@ class effect_circle:
     def __init__(self,x,y):
         self.x = x
         self.y = y
+        self.size = 5
         self.clear = 200
         self.alive = True
-        spotlight(x,y)
     
     def draw(self):
-        pygame.draw.circle(effect_surface,(random_color(),self.clear),(self.x,self.y),50)
+        r,g,b = random_color()
+        pygame.draw.circle(effect_surface,(r,g,b,self.clear),(self.x,self.y),self.size)
+        pygame.draw.circle(effect_surface,(0,0,0,0),(self.x,self.y),self.size - 4)
+
+        self.size += screen_height / 20
         self.clear -= 10
         if self.clear <= 0:
             self.clear = 0
@@ -636,6 +628,17 @@ while running:
         #総フレーム数（カウント
         count += 1
 
+        if count % 
+        new_effect_circle = effect_circle(mouse_x,mouse_y)
+        effect_circle_list.append(new_effect_circle)
+        alive_effect_circle_list = []
+        for i in effect_circle_list:
+            if i.alive:
+                alive_effect_circle_list.append(i)
+
+        for i in alive_effect_circle_list:
+            i.draw()
+
         #円の座標を設定する
         if  count % (circle_time * 125) == 0:
             while abs(new_circle_x - last_circle_x) <= split_screen_x * 5 and abs(new_circle_y - last_circle_y) <= split_screen_y * 5:
@@ -647,8 +650,6 @@ while running:
             last_circle_y = new_circle_y
 
         #surfaceの描画
-        screen.blit(effect_surface,(0,0))
-
         alive_circles = []
         for i in circles:
             if i.alive:
@@ -662,9 +663,11 @@ while running:
             i.update()
             i.draw()
         
-        screen.blit(circle_surface,(0,0))
-        
         screen.blit(comment_surface,(0,0))
+
+        screen.blit(effect_surface,(0,0))
+
+        screen.blit(circle_surface,(0,0))
 
         screen.blit(cursor_surface,(0,0))
 
