@@ -10,4 +10,7 @@ print(f"xのズレ:{-90 * magnification} , yのズレ{-50 * magnification}")
 # print(277 + 402 * 3 + 78*2)
 # print(1639 - 1920)
 
+print(954 - 1294)
+print(717 - 921)
+
 

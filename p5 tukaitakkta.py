@@ -39,7 +39,7 @@ pygame.init()
 
 screen_width = 1920
 screen_height = 1080
-screen = pygame.display.set_mode((screen_width, screen_height),pygame.HWSURFACE)
+screen = pygame.display.set_mode((screen_width, screen_height),pygame.FULLSCREEN | pygame.HWSURFACE)
 
 
 #変更可
@@ -48,7 +48,7 @@ fps = 100#一秒間に起きる画面更新の回数
 
 split_varue = 20 #円が出てくるマス目の細かさ
 
-use_aruco = False #True:設定したarucoマーカを追尾　False:マウスカードルを追尾
+use_aruco = True #True:設定したarucoマーカを追尾　False:マウスカードルを追尾
 
 comment_size = 200 #コメントのサイズを指定する
 comment_file_list = ["good.png"] #コメントのバリエーション　追加可能
@@ -82,7 +82,6 @@ for filename in circle_file_list:
     scale = circle_size / image.get_width()
     newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
     circle_list.append(newimage)
-print(len(circle_list))
 
 for filename in level_file_list:
     image = pygame.image.load(filename)
@@ -171,6 +170,8 @@ blue_feet = (0,0,0)
 blue_hand = (0,0,0)
 
 circle_time = 0
+
+check_count = 0
 
 if mode == "play":
     if difficulty_level == "easy":
@@ -343,9 +344,11 @@ def coordinate():
                     blue_hand = player_chege_point(ave),8
         return red_feet,red_hand,blue_feet,blue_hand
     else:
-        return pygame.mouse.get_pos(),0,1,2,3,4
+        return pygame.mouse.get_pos(),pygame.mouse.get_pos(),pygame.mouse.get_pos(),pygame.mouse.get_pos()
 
 def player_chege_point(player):
+    mouse_y = 0,0
+    mouse_x = 0,0
     if use_aruco:
 
         try:
@@ -370,7 +373,7 @@ def player_chege_point(player):
             if count % 50 == 0:
                 print("eroDivisionError")
 
-        return mouse_x , mouse_y
+    return mouse_x , mouse_y
 
 effect_circle_list = []
 
@@ -381,14 +384,14 @@ class effect_circle:
         self.size = 5
         self.clear = 200
         self.alive = True
+        self.r,self.g,self.b = random_color()
     
     def draw(self):
-        r,g,b = random_color()
-        pygame.draw.circle(effect_surface,(r,g,b,self.clear),(self.x,self.y),self.size)
+        pygame.draw.circle(effect_surface,(self.r,self.g,self.b,self.clear),(self.x,self.y),self.size)
         pygame.draw.circle(effect_surface,(0,0,0,0),(self.x,self.y),self.size - 4)
 
-        self.size += screen_height / 20
-        self.clear -= 10
+        self.size += screen_width / 200
+        self.clear -= 1
         if self.clear <= 0:
             self.clear = 0
             self.alive = False
@@ -434,6 +437,7 @@ else:
     print("現在の設定ではuse_arucoはFalseです。")
     print("カメラを使用せずに開始します。")
 
+    #ウィンドウの状況
 
 # 4. ゲームループ
 running = True
@@ -451,7 +455,6 @@ while running:
 
     #描写のリセット
     screen.fill((50,50,50))
-    effect_surface.fill((0,0,0,255 // 20))
     circle_surface.fill((0,0,0,0))
     comment_surface.fill((0,0,0,0))
     cursor_surface.fill((0,0,0,0))
@@ -460,6 +463,7 @@ while running:
     if mode == "set":
         if use_aruco:
             count += 1
+            check_surface.fill((0,0,0,0))
 
             pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
 
@@ -469,16 +473,34 @@ while running:
 
             pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
 
-            if count % 5 == 0:
 
-                ret, frame = cap.read()
+            ret, frame = cap.read()
 
-                cv2.imshow('check_window', frame)
+            if ret:
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                frame = numpy.rot90(frame) 
+                opencv_cap_surface = pygame.surfarray.make_surface(frame)
+                screen.blit(opencv_cap_surface,(screen_width / 2 - 340,screen_height * 2 / 3 - 204))
+                pygame.display.flip()
 
-
-                
-                if ret:
+                if count % 5 == 0:
+                    print(pygame.mouse.get_pos())
+                    check_count += 1
                     markers, ids, rejected = aruco_detector.detectMarkers(frame)
+                    count_check_most = []
+                    count_check = []
+                    if ids is not None:
+                        for i in ids:
+                            if i <= 4:
+                                count_check_most = i
+                            if i >= 4:
+                                count_check = i
+
+                    if check_count >= 40:
+                        if len(count_check_most) == 4 and len(count_check) >= 1:
+                            mode = "menu"
+                        else:
+                            check_count = 0
                     
                     for i in range(len(markers)):
                         ID = ids[i]
@@ -526,15 +548,6 @@ while running:
                         if ID == 8:
                             blue_hand = player_chege_point(ave),8
                             check_surface.blit(circle_list[3], ((screen_width * 5 // 9) - 90,(screen_height * 2 // 9) - 50))
-
-                        if ids in 1 and ids in 2 and ids in 3 and ids in 4 and (ids in 5 or ids in 6 or ids in 7 or ids in 8):
-                            check_count += 1
-                            if check_count >= 300:
-                                if ids in 1 and ids in 2 and ids in 3 and ids in 4 and (ids in 5 or ids in 6 or ids in 7 or ids in 8):
-                                    mode = "menu"
-                                    cv2.destroyAllWindows()
-                                else:
-                                    check_count = 0
 
             screen.blit(check_surface,(0,0))
 
@@ -628,17 +641,21 @@ while running:
         #総フレーム数（カウント
         count += 1
 
-        if count % 
-        new_effect_circle = effect_circle(mouse_x,mouse_y)
-        effect_circle_list.append(new_effect_circle)
+        if count % 150 == 0:
+            re_f,re_h,bl_f,bl_h = coordinate()
+            for i in [re_f,bl_f]:
+                new_effect_circle = effect_circle(i[0],i[1])
+                effect_circle_list.append(new_effect_circle)
+
+        effect_surface.fill((0,0,0,255 // 20))
         alive_effect_circle_list = []
         for i in effect_circle_list:
             if i.alive:
                 alive_effect_circle_list.append(i)
 
-        for i in alive_effect_circle_list:
+        effect_circle_list = alive_effect_circle_list
+        for i in effect_circle_list:
             i.draw()
-
         #円の座標を設定する
         if  count % (circle_time * 125) == 0:
             while abs(new_circle_x - last_circle_x) <= split_screen_x * 5 and abs(new_circle_y - last_circle_y) <= split_screen_y * 5:
