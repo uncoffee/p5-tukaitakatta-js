@@ -484,23 +484,42 @@ while running:
                 pygame.display.flip()
 
                 if count % 5 == 0:
-                    print(pygame.mouse.get_pos())
+                    if count == 5:
+                        four_point_count = 0
+                        red_feet_count = 0
+
+                    if count % 100 == 0:
+                        print(four_point_count)
+                        print(red_feet_count)
+
+                        if four_point_count >= 57:
+                            four_points = True
+                        else:
+                            four_point_count = 0
+
+                        if red_feet_count >= 8:
+                            red_feet = True
+                        else:
+                            four_point_count = 0
+
+                        count_check_most = 0
+                        count_check = 0
+
+                    #print(pygame.mouse.get_pos())
                     check_count += 1
                     markers, ids, rejected = aruco_detector.detectMarkers(frame)
-                    count_check_most = []
-                    count_check = []
                     if ids is not None:
                         for i in ids:
                             if i <= 4:
-                                count_check_most = i
-                            if i >= 4:
-                                count_check = i
+                                four_point_count += 1 #四隅の点
+                            if i >= 5:
+                                red_feet_count += 1 #赤足
 
-                    if check_count >= 40:
-                        if len(count_check_most) == 4 and len(count_check) >= 1:
-                            mode = "menu"
-                        else:
-                            check_count = 0
+                        if check_count >= 40:
+                            if len(count_check_most) == 4 and len(count_check) >= 1:
+                                mode = "menu"
+                            else:
+                                check_count = 0
                     
                     for i in range(len(markers)):
                         ID = ids[i]
