@@ -431,10 +431,29 @@ def change_y(A, B, now):
     x1, y1 = A
     x2, y2 = B
     now_x, now_y = now
-
     return ((y1 - y2) / (x1 - x2)) * (now_x - x1) + y1
-    
 
+class check_markers:
+    def __init__(self,id,name,task):
+        self.id = id
+        self.name = name
+        self.task = task
+        self.count = 0
+        self.success = False
+    def check_markers_sum(self):
+        self.count += 1
+    def check_markers_checker(self):
+        if self.count >= self.task:
+            self.success = True
+        self.count = 0
+
+marker_list = [left_top , right_top , right_bottom , left_bottom ,  blue_feet ,  blue_hand , red_feet , red_hand]
+checker_list = []
+for i in range(len(marker_list)): # 1:left_top 2:right_top 3:right_bottom 4:left_bottom 5:blue_feet 6:blue_hand 7:red_feet 8:red_hand
+    new_markers = check_markers(i+1,marker_list[i],5) #ここの数字で0.2秒間に読み取る目標を設定する。
+    checker_list.append(new_markers)
+marker_list = checker_list
+    
 aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
 aruco_params = cv2.aruco.DetectorParameters()
 aruco_detector = cv2.aruco.ArucoDetector(aruco_dict, aruco_params)
@@ -503,95 +522,70 @@ while running:
                 frame = numpy.rot90(frame) 
                 opencv_cap_surface = pygame.surfarray.make_surface(frame)
                 screen.blit(opencv_cap_surface,(screen_width / 2 - 340,screen_height * 2 / 3 - 204))
-                
 
                 if count % 5 == 0:
-                    coordinate()
-                    if count == 5:
-                        
-                        four_point_count = 0
-                        player_check_count = 0
-                        four_point = False
-                        player_check = False
-
-                    if count % 100 == 0:
-                        print(four_point_count)
-                        print(player_check_count)
-
-                        if four_point_count >= 150:
-                            four_point = True
-
-                        if player_check_count >= 40:
-                            player_check = True
-
-                        if four_point == True and player_check == True:
-                            mode = "menu"
-
-                        count_check_most = 0
-                        count_check = 0
-
-                    #print(pygame.mouse.get_pos())
-                    check_count += 1
                     markers, ids, rejected = aruco_detector.detectMarkers(frame)
+
                     if ids is not None:
-                        for i in ids:
-                            if i <= 4:
-                                four_point_count += 1 #四隅の点
-                            if i == 5:
-                                player_check_count += 3 #赤足がないとバグるから。
-                            if i >= 6:
-                                player_check_count += 1 #その他の判定（おまけ
-                    
-                    for i in range(len(markers)):
-                        ID = ids[i]
-                        C1 = markers[i][0][0]
-                        C2 = markers[i][0][1]
-                        C3 = markers[i][0][2]
-                        C4 = markers[i][0][3]
-                        #ave[x,y]
-                        ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
+                        for m in marker_list:
+                            m.check_markers_sum()
 
-                        #print(ID)
+                        for i in range(len(markers)):
+                            ID = ids[i]
+                            C1 = markers[i][0][0]
+                            C2 = markers[i][0][1]
+                            C3 = markers[i][0][2]
+                            C4 = markers[i][0][3]
+                            #ave[x,y]
+                            ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
 
-                        if ID == 1:
+                            if ID == 1:
 
-                            left_top = ave
-                            pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
-                            #print(left_top)
+                                left_top = ave
+                                pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
+                                #print(left_top)
 
-                        if ID == 2:
+                            if ID == 2:
 
-                            right_top = ave
-                            pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.9),int(screen_height * 0.1)), 30)
-                            #print(right_top)
+                                right_top = ave
+                                pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.9),int(screen_height * 0.1)), 30)
+                                #print(right_top)
 
-                        if ID == 3:
+                            if ID == 3:
 
-                            right_bottom = ave
-                            pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.9),int(screen_height * 0.9)), 30)
-                            #print(right_bottom)
+                                right_bottom = ave
+                                pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.9),int(screen_height * 0.9)), 30)
+                                #print(right_bottom)
 
-                        if ID == 4:
+                            if ID == 4:
 
-                            left_bottom = ave
-                            pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
-                            #print(left_bottom)
+                                left_bottom = ave
+                                pygame.draw.circle(check_surface, (255,0,0),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
+                                #print(left_bottom)
 
-                        if ID == 5:
+                            if ID == 5:
 
-                            check_surface.blit(circle_list[0], ((screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50))
+                                check_surface.blit(circle_list[0], ((screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50))
 
-                        if ID == 6:
+                            if ID == 6:
 
-                            check_surface.blit(circle_list[1], ((screen_width * 4 // 9) - 90,(screen_height * 2 // 9) - 50))
+                                check_surface.blit(circle_list[1], ((screen_width * 4 // 9) - 90,(screen_height * 2 // 9) - 50))
 
-                        if ID == 7:
+                            if ID == 7:
 
-                            check_surface.blit(circle_list[2], ((screen_width * 5 // 9) - 90,(screen_height * 1 // 9) - 50))
+                                check_surface.blit(circle_list[2], ((screen_width * 5 // 9) - 90,(screen_height * 1 // 9) - 50))
 
-                        if ID == 8:
+                            if ID == 8:
 
-                            check_surface.blit(circle_list[3], ((screen_width * 5 // 9) - 90,(screen_height * 2 // 9) - 50))
+                                check_surface.blit(circle_list[3], ((screen_width * 5 // 9) - 90,(screen_height * 2 // 9) - 50))
+                if count % 100 == 0:
+                    for i in marker_list:
+                        i.check_markers_checker()
+
+                        if i.success:
+                            mode = "menu"
+                        else:
+                            break
 
             screen.blit(check_surface,(0,0))
 
