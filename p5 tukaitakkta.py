@@ -443,10 +443,16 @@ class check_markers:
         self.success = False
     def check_markers_sum(self):
         self.count += 1
-    def check_markers_checker(self):
-        if self.count >= self.task:
-            self.success = True
-        self.count = 0
+
+def check_markers_checker():
+    for i in marker_list:
+        if i.count >= i.task:
+            i.count = 0               
+            continue
+        else:
+            i.count = 0
+            return False
+    return True
 
 
 left_top = int(screen_width * 0.1),int(screen_height * 0.1)
@@ -459,7 +465,7 @@ red_feet = (screen_width * 5 // 9) - 90,(screen_height * 1 // 9) - 50
 red_hand = (screen_width * 5 // 9) - 90,(screen_height * 2 // 9) - 50
 
 marker_set_list = [left_top , right_top , right_bottom , left_bottom , blue_feet ,  blue_hand , red_feet , red_hand]
-marker_list = [None]
+marker_list = []
 for i in range(len(marker_set_list)): # 1:left_top 2:right_top 3:right_bottom 4:left_bottom 5:blue_feet 6:blue_hand 7:red_feet 8:red_hand
     new_markers = check_markers(i+1,marker_set_list[i], 5 ,marker_set_list[i]) #ここの数字で0.2秒間に読み取る目標を設定する。
     marker_list.append(new_markers)
@@ -550,21 +556,17 @@ while running:
                             ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
 
                             ID.check_markers_sum()
-                            x , y = marker_list[ID].draw_point
+                            x , y = marker_list[ID - 1].draw_point
                             if ID <= 4:
-                                 pygame.draw.circle(check_surface, (255,0,0),(x,y), 30)
+                                pygame.draw.circle(check_surface, (255,0,0),(x,y), 30)
                             else:
-                                
+                                screen.blit(circle_list[circle_list[i - 5]], (x,y))
+
 
 
                 if count % 100 == 0:
-                    for i in marker_list:
-                        i.check_markers_checker()
-
-                        if i.success:
-                            mode = "menu"
-                        else:
-                            break
+                    if check_markers_checker():
+                        mode = "menu"
 
             screen.blit(check_surface,(0,0))
 
