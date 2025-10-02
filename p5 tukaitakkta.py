@@ -464,10 +464,19 @@ blue_hand = (screen_width * 4 // 9) - 90,(screen_height * 2 // 9) - 50
 red_feet = (screen_width * 5 // 9) - 90,(screen_height * 1 // 9) - 50
 red_hand = (screen_width * 5 // 9) - 90,(screen_height * 2 // 9) - 50
 
-marker_set_list = [left_top , right_top , right_bottom , left_bottom , blue_feet ,  blue_hand , red_feet , red_hand]
+marker_set_list = [
+    [int(screen_width * 0.1),int(screen_height * 0.1)],
+    [int(screen_width * 0.9),int(screen_height * 0.1)],
+    [int(screen_width * 0.9),int(screen_height * 0.9)],
+    [int(screen_width * 0.1),int(screen_height * 0.9)],
+    [(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50],
+    [(screen_width * 4 // 9) - 90,(screen_height * 2 // 9) - 50],
+    [(screen_width * 5 // 9) - 90,(screen_height * 1 // 9) - 50],
+    [(screen_width * 5 // 9) - 90,(screen_height * 2 // 9) - 50],
+]
 marker_list = []
 for i in range(len(marker_set_list)): # 1:left_top 2:right_top 3:right_bottom 4:left_bottom 5:blue_feet 6:blue_hand 7:red_feet 8:red_hand
-    new_markers = check_markers(i+1,marker_set_list[i], 5 ,marker_set_list[i]) #ここの数字で0.2秒間に読み取る目標を設定する。
+    new_markers = check_markers(i+1,5,marker_set_list[i],(0,0)) #ここの数字で0.2秒間に読み取る目標を設定する。
     marker_list.append(new_markers)
     
 aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
@@ -552,11 +561,14 @@ while running:
                             C2 = markers[i][0][1]
                             C3 = markers[i][0][2]
                             C4 = markers[i][0][3]
-                            #ave[x,y]
-                            ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
 
-                            ID.check_markers_sum()
-                            x , y = marker_list[ID - 1].draw_point
+                            ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
+                            marker_list[int(ID) - 1].now_point = ave
+
+                            x , y = marker_list[int(ID) - 1].draw_point
+
+                        for i in marker_list:
+                            i.check_markers_sum()
                             if ID <= 4:
                                 pygame.draw.circle(check_surface, (255,0,0),(x,y), 30)
                             else:
