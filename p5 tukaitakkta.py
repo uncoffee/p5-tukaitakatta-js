@@ -433,44 +433,51 @@ def change_y(A, B, now):
     now_x, now_y = now
     return ((y1 - y2) / (x1 - x2)) * (now_x - x1) + y1
 
-class check_markers:
+id_counter = 0
+
+class set_check_entity:
+    def __init__(self,task,draw_point,now_point):
+        global id_counter
+        id_counter += 1
+        self.count = 0
+
+        self.task = task
+        self.id = id_counter
+        self.draw_point = draw_point
+        self.now_point = now_point
+
+
+class edge_marker(set_check_entity):
     def __init__(self,id,task,draw_point,now_point):
         self.id = id
+
+        super().__init__(self,task,draw_point)
         self.task = task
         self.draw_point = draw_point
         self.now_point = now_point
-        self.count = 0
-    def check_marker_sum(self):
-        self.count += 1
 
-class check_player:
-    def __init__(self,id,task,draw_point,now_point):
+
+
+class check_player(set_check_entity):
+    def __init__(self,id,task,draw_point,now_point,img):
         self.id = id
+        self.img = img
+
+        super().__init__(self,task,draw_point)
         self.task = task
         self.draw_point = draw_point
         self.now_point = now_point
-        self.count = 0
-    def check_player_sum(self):
-        self.count += 1
 
 
-def check_markers_checker():
-    for i in marker_set_list:
+def markers_checker():
+    for i in set_entity_list:
         if i.count >= i.task:
             i.count = 0               
             continue
         else:
-            i.count = 0
+            for j in set_entity_list:
+                j.count = 0
             return False
-        
-    for i in player_set_list:
-        if i.count >= i.task:
-            i.count = 0               
-            continue
-        else:
-            i.count = 0
-            return False
-        
     return True
 
 
@@ -497,16 +504,23 @@ marker_set_list = [
     [int(screen_width * 0.1),int(screen_height * 0.9)],
 ]
 
-set_marker_list = []
-for i in range(len(marker_set_list)): # 0:left_top 1:right_top 2:right_bottom 3:left_bottom
-    new_markers = check_markers(i, 5 ,marker_set_list[i],(0,0)) #ここの数字で0.2秒間に読み取る目標を設定する。
-    set_marker_list.append(new_markers)
+set_entity_list = []
+for i in range(len(set_entity_list)): # 0:left_top 1:right_top 2:right_bottom 3:left_bottom
+    new_entity = set_check_entity(i, 5 ,set_entity_list[i],(0,0)) #ここの数字で0.2秒間に読み取る目標を設定する。
+    set_entity_list.append(new_entity)
+
+edge_marker_list = []
+for i in range(len(player_set_list)): # 0:blue_feet 1:blue_hand 2:red_feet 3:red_hand
+    new_players = edge_marker(i, 5 ,marker_set_list[i],(0,0)) #ここの数字で0.2秒間に読み取る目標を設定する。
+    edge_marker_list.append(new_players)
+    set_entity_list.append(new_players)
 
 
 player_marker_list = []
 for i in range(len(player_set_list)): # 0:blue_feet 1:blue_hand 2:red_feet 3:red_hand
-    new_players = check_markers(i, 5 ,marker_set_list[i],(0,0)) #ここの数字で0.2秒間に読み取る目標を設定する。
+    new_players = check_player(i, 5 ,marker_set_list[i],(0,0),player_circle_list[i]) #ここの数字で0.2秒間に読み取る目標を設定する。
     player_marker_list.append(new_players)
+    set_entity_list.append(new_players)
     
     
 aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
@@ -589,29 +603,22 @@ while running:
                             C2 = markers[i][0][1]
                             C3 = markers[i][0][2]
                             C4 = markers[i][0][3]
-
                             ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
-                            marker_list[int(ID) - 1].now_point = ave
 
-                            x , y = marker_list[int(ID) -1].draw_point
+                            for j in set_entity_list:
+                                if j.id == ID:
+                                    j.now_point = ave
 
-                            if int(ID) < len(set_marker_list) :
-                                set_marker_list[int(ID)].check_marker_sum()
-                                pygame.draw.circle(check_surface, (255,0,0),(), 30)
+                                    j.count += 1
 
-                            if int(ID) - len(set_marker_list) <= 0:
-                                player_list_id = int(ID) - len(set_marker_list)
-                                player_marker_list[player_list_id].check_player_sum()
+                                    if j.id <= 4:
+                                        pygame.draw.circle(check_surface, (255,0,0),(j.draw_point), 30)
 
-                                
-                                
-
-
-
-
+                                    else:
+                                        screen.blit(j.img,j.draw_point)
 
                 if count % 100 == 0:
-                    if check_markers_checker():
+                    if markers_checker():
                         mode = "menu"
 
             screen.blit(check_surface,(0,0))
