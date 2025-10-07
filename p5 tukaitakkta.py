@@ -334,7 +334,7 @@ def coordinate():
                 #ave[x,y]
                 ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
 
-                x,y = player_chege_point(ave)
+                x,y =  player_chege_point(ave)
                 if ID == 1:
                     global left_top
                     left_top = ave
@@ -607,10 +607,12 @@ while running:
 
                                     j.count += 1
 
-                                    if j.id <= 4:
+                                    if j.id <= 3:
+                                        j.now_point = ave
                                         pygame.draw.circle(check_surface, (255,0,0),(j.draw_point), 30)
 
                                     else:
+                                        j.now_point
                                         screen.blit(j.img,j.draw_point)
 
                 if count % 100 == 0:
