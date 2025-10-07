@@ -436,7 +436,7 @@ def change_y(A, B, now):
 id_counter = 0
 
 class set_check_entity:
-    def __init__(self,task,draw_point,now_point):
+    def __init__(self,task,draw_point,now_point,img):
         global id_counter
         id_counter += 1
         self.count = 0
@@ -445,28 +445,24 @@ class set_check_entity:
         self.id = id_counter
         self.draw_point = draw_point
         self.now_point = now_point
+        self.img = img
 
 
 class edge_marker(set_check_entity):
     def __init__(self,id,task,draw_point,now_point):
+        super().__init__(task,draw_point,now_point,None)
         self.id = id
 
-        super().__init__(self,task,draw_point)
-        self.task = task
-        self.draw_point = draw_point
-        self.now_point = now_point
+
 
 
 
 class check_player(set_check_entity):
     def __init__(self,id,task,draw_point,now_point,img):
-        self.id = id
+        super().__init__(task,draw_point,now_point,img)
         self.img = img
+        self.id = id
 
-        super().__init__(self,task,draw_point)
-        self.task = task
-        self.draw_point = draw_point
-        self.now_point = now_point
 
 
 def markers_checker():
@@ -606,7 +602,7 @@ while running:
                             ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
 
                             for j in set_entity_list:
-                                if j.id == ID:
+                                if j.id == int(ID):
                                     j.now_point = ave
 
                                     j.count += 1
