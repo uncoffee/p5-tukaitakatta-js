@@ -433,19 +433,20 @@ def change_y(A, B, now):
     now_x, now_y = now
     return ((y1 - y2) / (x1 - x2)) * (now_x - x1) + y1
 
-id_counter = 0
+id_counter = 1
 
 class set_check_entity:
     def __init__(self,task,draw_point,now_point,img):
         global id_counter
-        id_counter += 1
         self.count = 0
 
         self.task = task
-        self.id = id_counter
+        self.check_id = id_counter
         self.draw_point = draw_point
         self.now_point = now_point
         self.img = img
+
+        id_counter += 1
 
 
 class edge_marker(set_check_entity):
@@ -468,13 +469,22 @@ class check_player(set_check_entity):
 def markers_checker():
     for i in set_entity_list:
         if i.count >= i.task:
-            i.count = 0               
             continue
         else:
             for j in set_entity_list:
                 j.count = 0
             return False
     return True
+
+def p(text,time):
+    if time == "n":
+        print(text)
+        return
+
+    if time % 50 == 0:
+        print(text)
+    
+
 
 
 left_top = int(screen_width * 0.1),int(screen_height * 0.1)
@@ -500,23 +510,32 @@ marker_set_list = [
     [int(screen_width * 0.1),int(screen_height * 0.9)],
 ]
 
-set_entity_list = []
-for i in range(len(set_entity_list)): # 0:left_top 1:right_top 2:right_bottom 3:left_bottom
-    new_entity = set_check_entity(i, 5 ,set_entity_list[i],(0,0)) #ここの数字で0.2秒間に読み取る目標を設定する。
-    set_entity_list.append(new_entity)
-
 edge_marker_list = []
 for i in range(len(player_set_list)): # 0:blue_feet 1:blue_hand 2:red_feet 3:red_hand
     new_players = edge_marker(i, 5 ,marker_set_list[i],(0,0)) #ここの数字で0.2秒間に読み取る目標を設定する。
     edge_marker_list.append(new_players)
-    set_entity_list.append(new_players)
+#    set_entity_list.append(new_players)
 
 
 player_marker_list = []
 for i in range(len(player_set_list)): # 0:blue_feet 1:blue_hand 2:red_feet 3:red_hand
-    new_players = check_player(i, 5 ,marker_set_list[i],(0,0),player_circle_list[i]) #ここの数字で0.2秒間に読み取る目標を設定する。
+    new_players = check_player(i, 5 ,player_set_list[i],(0,0),player_circle_list[i]) #ここの数字で0.2秒間に読み取る目標を設定する。
     player_marker_list.append(new_players)
-    set_entity_list.append(new_players)
+#    set_entity_list.append(new_players)
+
+# entity_set_list = edge_marker_list + player_marker_list
+# for i in range(len(player_set_list)): # 0:blue_feet 1:blue_hand 2:red_feet 3:red_hand
+#     new_players = check_player(i, 5 ,marker_set_list[i],(0,0),player_circle_list[i]) #ここの数字で0.2秒間に読み取る目標を設定する。
+#     player_marker_list.append(new_players)
+#     set_entity_list.append(new_players)
+# entity_list = []
+
+set_entity_list = edge_marker_list + player_marker_list 
+# for i in set_entity_list:
+#     entity = vars(i)
+#     entity_list.append(entity["check_id"])
+#     p(entity["check_id"],"n")
+#     p(type(entity["check_id"]),"n")
     
     
 aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
@@ -602,18 +621,21 @@ while running:
                             ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
 
                             for j in set_entity_list:
-                                if j.id == int(ID):
+                                p(type(j),"n")
+                                p(int(ID),"n")
+                                if j.check_id == int(ID):
                                     j.now_point = ave
-
                                     j.count += 1
 
-                                    if j.id <= 3:
+                                    if j.check_id <= 4:
                                         j.now_point = ave
                                         pygame.draw.circle(check_surface, (255,0,0),(j.draw_point), 30)
 
                                     else:
-                                        j.now_point
+                                        j.now_point = player_chege_point(ave)
                                         screen.blit(j.img,j.draw_point)
+
+                                    p(j.id,count)
 
                 if count % 100 == 0:
                     if markers_checker():
