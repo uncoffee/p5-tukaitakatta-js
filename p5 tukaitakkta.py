@@ -54,9 +54,13 @@ comment_size = 200 #コメントのサイズを指定する
 comment_file_list = ["good.png"] #コメントのバリエーション　追加可能
 comment_list = []
 
-circle_size = 180 #円のサイズを指定する
+circle_size = 180#表示される円の大きさ
 
-level_size = 600#難易度boxの大きさを変える
+level_size = 600#難易度boxの大きさ
+
+start_button_size = 1000#スタートボタンの大きさ
+
+level_button_frame_size = 1800#レベルを囲んでいる枠の大きさ
 
 edge_range = 3 #外周と生成円の距離HTMLのpaddingのノリ
 
@@ -91,12 +95,15 @@ for filename in level_file_list:
 
 for filename in start_button_file_list:
     image = pygame.image.load(filename)
-    scale = 1000 / image.get_width()
+    scale = start_button_size / image.get_width()
     newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale)) 
     start_button_list.append(newimage)
 
+screen_img_list = start_button_list + level_list
+screen_name_list = start_button_file_list + level_file_list
+
 image = pygame.image.load("level_frame.png")
-scale = 1800 / image.get_width()
+scale = level_button_frame_size / image.get_width()
 game_level_frame = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
 
 mode = "set"
@@ -454,17 +461,11 @@ class edge_marker(set_check_entity):
         super().__init__(task,draw_point,now_point,None)
         self.id = id
 
-
-
-
-
 class check_player(set_check_entity):
     def __init__(self,id,task,draw_point,now_point,img):
         super().__init__(task,draw_point,now_point,img)
         self.img = img
         self.id = id
-
-
 
 def markers_checker():
     for i in set_entity_list:
@@ -476,6 +477,36 @@ def markers_checker():
             return False
     return True
 
+class menu_entity:
+    def __init__(self,name,img,draw_point,range):
+        self.name = name
+        self.img = img 
+        self.draw_point = draw_point
+        self.range = range
+
+class level_entitys(menu_entity):
+    def __init__(self,name,img,draw_point,range,level_seter):
+        super().__init__(name,img,draw_point,range)
+        self.range = range
+        self.level_seter = level_seter
+
+    def action(self):
+        global difficulty_level
+        difficulty_level = self.level_seter
+
+class mode_button_entity(menu_entity):
+    def __init__(self,name,img,draw_point,range,mode_seter):
+        super().__init__(name,img,draw_point,range)
+        self.mode_seter = mode_seter
+
+    def action(self):
+        global mode
+        mode = self.mode_seter
+
+def push_checker(cursor):
+
+
+
 def p(text,time):
     if time == "n":
         print(text)
@@ -486,7 +517,7 @@ def p(text,time):
     
 
 
-
+#いらないかも
 left_top = int(screen_width * 0.1),int(screen_height * 0.1)
 right_top = int(screen_width * 0.9),int(screen_height * 0.1)
 right_bottom = int(screen_width * 0.9),int(screen_height * 0.9)
@@ -521,21 +552,49 @@ player_marker_list = []
 for i in range(len(player_set_list)): # 0:blue_feet 1:blue_hand 2:red_feet 3:red_hand
     new_players = check_player(i, 5 ,player_set_list[i],(0,0),player_circle_list[i]) #ここの数字で0.2秒間に読み取る目標を設定する。
     player_marker_list.append(new_players)
-#    set_entity_list.append(new_players)
 
-# entity_set_list = edge_marker_list + player_marker_list
-# for i in range(len(player_set_list)): # 0:blue_feet 1:blue_hand 2:red_feet 3:red_hand
-#     new_players = check_player(i, 5 ,marker_set_list[i],(0,0),player_circle_list[i]) #ここの数字で0.2秒間に読み取る目標を設定する。
-#     player_marker_list.append(new_players)
-#     set_entity_list.append(new_players)
-# entity_list = []
+set_entity_list = edge_marker_list + player_marker_list
 
-set_entity_list = edge_marker_list + player_marker_list 
-# for i in set_entity_list:
-#     entity = vars(i)
-#     entity_list.append(entity["check_id"])
-#     p(entity["check_id"],"n")
-#     p(type(entity["check_id"]),"n")
+
+levelentity_drawpoint_list = [
+    ((screen_width * 3 / 12) -300,(screen_height / 3) - 167),
+    ((screen_width * 6 / 12) -300,(screen_height / 3) - 167),
+    ((screen_width * 9 / 12) -300,(screen_height / 3) - 167)
+]
+
+levelentity_range_list = [
+    ((277,679),(242,485))
+    ((757,1159),(242,485))
+    ((1237,1639),(242,485))
+]
+
+levelentity_range_list = [
+    "easy",
+    "normal",
+    "hard"
+]
+
+
+modebuttonentity_drawpoint_list = [
+    ((screen_width / 2) -500,(screen_height * 4 / 5) -278)
+    ((screen_width / 2) -500,(screen_height * 4 / 5) -278)
+]
+
+modebuttonentity_range_list = [
+    ((524,1398),(734,1006))
+    ((524,1398),(734,1006))
+]
+
+level_entity_list = []
+for i in range(len(level_file_list)):
+    new_level_entity = level_entitys(level_file_list[i],level_list[i],levelentity_drawpoint_list[i],levelentity_range_list[i],levelentity_range_list[i])
+    level_entity_list.append(new_level_entity)
+
+mode_button_entity_list = []
+for i in range(len(start_button_file_list)):
+    new_mode_button_entity = mode_button_entity(start_button_file_list[i],start_button_list[i])
+
+
     
     
 aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
