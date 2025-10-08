@@ -75,6 +75,8 @@ level_list = []
 start_button_file_list = ["start_button.png" , "start_button_frame.png"]
 start_button_list = []
 
+menu_entity_list = start_button_list + level_list 
+
 for filename in comment_file_list:
     image = pygame.image.load(filename)
     scale = comment_size / image.get_width()
@@ -478,32 +480,63 @@ def markers_checker():
     return True
 
 class menu_entity:
-    def __init__(self,name,img,draw_point,range):
+    def __init__(self,name,img,draw_point,range,clear):
         self.name = name
         self.img = img 
         self.draw_point = draw_point
         self.range = range
+        self.clear = clear
 
 class level_entitys(menu_entity):
     def __init__(self,name,img,draw_point,range,level_seter):
+        clear = 50 #エンティティーの初期透明度の指定　min:0 max:255
+
         super().__init__(name,img,draw_point,range)
         self.range = range
         self.level_seter = level_seter
+        self.clear = 50
+        self.count = 0
 
     def action(self):
+
         global difficulty_level
         difficulty_level = self.level_seter
 
 class mode_button_entity(menu_entity):
     def __init__(self,name,img,draw_point,range,mode_seter):
-        super().__init__(name,img,draw_point,range)
+        if self.name == "start_button.png":
+            clear = 255 #エンティティーの初期透明度の指定　min:0 max:255
+
+        else:
+            clear = 0 #エンティティーの初期透明度の指定　min:0 max:255
+
+        super().__init__(name,img,draw_point,range,clear)
         self.mode_seter = mode_seter
+        self.count = 0
 
     def action(self):
+        if self.name == "start_button_frame.png":
+            self.claer += 1
+        
+        
+
         global mode
         mode = self.mode_seter
 
 def push_checker(cursor):
+    for i in menu_entity_list:
+        x , y = i.range
+        a_x , t_x = x
+        a_y , t_y = y
+
+        c_x , c_y = cursor
+
+        if a_x <= c_x <= t_x and a_y <= c_y <= t_y:
+            i.action()
+
+
+
+    
 
 
 
