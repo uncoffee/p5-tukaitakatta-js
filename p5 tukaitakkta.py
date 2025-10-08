@@ -489,42 +489,60 @@ class menu_entity:
 
 class level_entitys(menu_entity):
     def __init__(self,name,img,draw_point,range,level_seter):
-        clear = 50 #エンティティーの初期透明度の指定　min:0 max:255
+        defa_clear = 50 #エンティティーの初期透明度の指定　min:0 max:255
 
-        super().__init__(name,img,draw_point,range)
+        super().__init__(name,img,draw_point,range,defa_clear)
         self.range = range
         self.level_seter = level_seter
-        self.clear = 50
+        self.clear = defa_clear
+        self.defa_clear = defa_clear
         self.count = 0
 
     def action(self):
+        self.clear += 1
+        if self.clear > 255:
+            self.clear = 255
+            global difficulty_level
+            difficulty_level = self.level_seter
 
-        global difficulty_level
-        difficulty_level = self.level_seter
+    def back_action(self):
+        self.clear -= 1
+        if self.clear < self.defa_clear:
+            self.clear = self.defa_clear
+
 
 class mode_button_entity(menu_entity):
     def __init__(self,name,img,draw_point,range,mode_seter):
         if self.name == "start_button.png":
-            clear = 255 #エンティティーの初期透明度の指定　min:0 max:255
+            defa_clear = 255 #エンティティーの初期透明度の指定　min:0 max:255
 
         else:
-            clear = 0 #エンティティーの初期透明度の指定　min:0 max:255
+            defa_clear = 0 #エンティティーの初期透明度の指定　min:0 max:255
 
-        super().__init__(name,img,draw_point,range,clear)
+        super().__init__(name,img,draw_point,range,defa_clear)
         self.mode_seter = mode_seter
         self.count = 0
+        self.clear = defa_clear
+        self.defa_clear = defa_clear
 
     def action(self):
         if self.name == "start_button_frame.png":
             self.claer += 1
-        
-        
+            if self.clear > 255:
+                self.clear = 255
+                global mode
+                mode = self.mode_seter
 
-        global mode
-        mode = self.mode_seter
+    def back_action(self):
+        if self.name == "start_button_frame.png":
+            self.clear -= 1
+            if self.clear < self.defa_clear:
+                self.clear = self.defa_clear
+
+            
 
 def push_checker(cursor):
-    for i in menu_entity_list:
+    for i in menu_entity_list: #aから始まるものはアンダー（底辺）に当たる座標。tから始まるものはトップ（上底）に当たる座標。
         x , y = i.range
         a_x , t_x = x
         a_y , t_y = y
@@ -533,6 +551,16 @@ def push_checker(cursor):
 
         if a_x <= c_x <= t_x and a_y <= c_y <= t_y:
             i.action()
+
+        else:
+            i.back_action()
+
+class player_point:
+    def __init__(self,id,name,img,now_point):
+        self.id = id 
+        self.name = name
+        self.img = img
+        self.now_point = now_point
 
 
 
