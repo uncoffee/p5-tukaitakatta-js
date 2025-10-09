@@ -48,7 +48,7 @@ fps = 100#一秒間に起きる画面更新の回数
 
 split_varue = 20 #円が出てくるマス目の細かさ
 
-use_aruco = True #True:設定したarucoマーカを追尾　False:マウスカードルを追尾
+use_aruco = False #True:設定したarucoマーカを追尾　False:マウスカードルを追尾
 
 comment_size = 200 #コメントのサイズを指定する
 comment_file_list = ["good.png"] #コメントのバリエーション　追加可能
