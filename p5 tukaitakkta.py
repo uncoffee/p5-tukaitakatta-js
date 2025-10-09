@@ -556,8 +556,7 @@ def push_checker(cursor):
             i.back_action()
 
 class player_point:
-    def __init__(self,id,name,img,now_point):
-        self.id = id 
+    def __init__(self,name,img,now_point):
         self.name = name
         self.img = img
         self.now_point = now_point
