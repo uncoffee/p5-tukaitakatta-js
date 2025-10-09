@@ -55,7 +55,13 @@ comment_file_list = ["good.png"] #コメントのバリエーション　追加�
 comment_list = []
 
 circle_size = 180#表示される円の大きさ
+circle_size = 180#表示される円の大きさ
 
+level_size = 600#難易度boxの大きさ
+
+start_button_size = 1000#スタートボタンの大きさ
+
+level_button_frame_size = 1800#レベルを囲んでいる枠の大きさ
 level_size = 600#難易度boxの大きさ
 
 start_button_size = 1000#スタートボタンの大きさ
@@ -68,12 +74,16 @@ edge_range = 3 #外周と生成円の距離HTMLのpaddingのノリ
 #変更不可
 player_circle_file_list =["青足.png","赤足.png","青手.png","赤手.png"] #円のバリエーション
 player_circle_list = []
+player_circle_file_list =["青足.png","赤足.png","青手.png","赤手.png"] #円のバリエーション
+player_circle_list = []
 
 level_file_list = ["easy.png" , "normal.png" , "hard.png"] #難易度のバリエーション
 level_list = []
 
 start_button_file_list = ["start_button.png" , "start_button_frame.png"]
 start_button_list = []
+
+menu_entity_list = start_button_list + level_list 
 
 menu_entity_list = start_button_list + level_list 
 
@@ -84,9 +94,11 @@ for filename in comment_file_list:
     comment_list.append(newimage)
 
 for filename in player_circle_file_list:
+for filename in player_circle_file_list:
     image = pygame.image.load(filename)
     scale = circle_size / image.get_width()
     newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
+    player_circle_list.append(newimage)
     player_circle_list.append(newimage)
 
 for filename in level_file_list:
@@ -98,13 +110,18 @@ for filename in level_file_list:
 for filename in start_button_file_list:
     image = pygame.image.load(filename)
     scale = start_button_size / image.get_width()
+    scale = start_button_size / image.get_width()
     newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale)) 
     start_button_list.append(newimage)
 
 screen_img_list = start_button_list + level_list
 screen_name_list = start_button_file_list + level_file_list
 
+screen_img_list = start_button_list + level_list
+screen_name_list = start_button_file_list + level_file_list
+
 image = pygame.image.load("level_frame.png")
+scale = level_button_frame_size / image.get_width()
 scale = level_button_frame_size / image.get_width()
 game_level_frame = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
 
@@ -344,6 +361,7 @@ def coordinate():
                 ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
 
                 x,y =  player_chege_point(ave)
+                x,y =  player_chege_point(ave)
                 if ID == 1:
                     global left_top
                     left_top = ave
@@ -499,7 +517,45 @@ class level_entitys(menu_entity):
         self.level_seter = level_seter
         self.clear = defa_clear
         self.defa_clear = defa_clear
+        self.img = img 
+        self.draw_point = draw_point
+        self.range = pushrange
+        self.clear = clear
+
+class level_entitys(menu_entity):
+    def __init__(self,name,img,draw_point,pushrange,level_seter):
+        defa_clear = 50 #エンティティーの初期透明度の指定　min:0 max:255
+
+        super().__init__(name,img,draw_point,pushrange,defa_clear)
+        self.range = pushrange
+        self.level_seter = level_seter
+        self.clear = defa_clear
+        self.defa_clear = defa_clear
         self.count = 0
+
+    def action(self):
+        self.clear += 1
+        if self.clear > 255:
+            self.clear = 255
+            global difficulty_level
+            difficulty_level = self.level_seter
+
+    def back_action(self):
+        self.clear -= 1
+        if self.clear < self.defa_clear:
+            self.clear = self.defa_clear
+
+
+class mode_button_entity(menu_entity):
+    def __init__(self,name,img,draw_point,pushrange,mode_seter):
+        if name == "start_button.png":
+            defa_clear = 255 #エンティティーの初期透明度の指定　min:0 max:255
+
+        else:
+            defa_clear = 0 #エンティティーの初期透明度の指定　min:0 max:255
+
+        super().__init__(name,img,draw_point,pushrange,defa_clear)
+        self.mode_seter = mode_seter
 
     def action(self):
         self.clear += 1
@@ -760,6 +816,8 @@ while running:
                     marker_screen_seter(ret, frame ,"set")
 
                 if count % 100 == 0:
+                    if markers_checker():
+                        mode = "menu"
                     if markers_checker():
                         mode = "menu"
 
