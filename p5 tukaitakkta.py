@@ -480,19 +480,19 @@ def markers_checker():
     return True
 
 class menu_entity:
-    def __init__(self,name,img,draw_point,range,clear):
+    def __init__(self,name,img,draw_point,pushrange,clear):
         self.name = name
         self.img = img 
         self.draw_point = draw_point
-        self.range = range
+        self.range = pushrange
         self.clear = clear
 
 class level_entitys(menu_entity):
-    def __init__(self,name,img,draw_point,range,level_seter):
+    def __init__(self,name,img,draw_point,pushrange,level_seter):
         defa_clear = 50 #エンティティーの初期透明度の指定　min:0 max:255
 
-        super().__init__(name,img,draw_point,range,defa_clear)
-        self.range = range
+        super().__init__(name,img,draw_point,pushrange,defa_clear)
+        self.range = pushrange
         self.level_seter = level_seter
         self.clear = defa_clear
         self.defa_clear = defa_clear
@@ -512,14 +512,14 @@ class level_entitys(menu_entity):
 
 
 class mode_button_entity(menu_entity):
-    def __init__(self,name,img,draw_point,range,mode_seter):
+    def __init__(self,name,img,draw_point,pushrange,mode_seter):
         if self.name == "start_button.png":
             defa_clear = 255 #エンティティーの初期透明度の指定　min:0 max:255
 
         else:
             defa_clear = 0 #エンティティーの初期透明度の指定　min:0 max:255
 
-        super().__init__(name,img,draw_point,range,defa_clear)
+        super().__init__(name,img,draw_point,pushrange,defa_clear)
         self.mode_seter = mode_seter
         self.count = 0
         self.clear = defa_clear
@@ -555,7 +555,7 @@ def push_checker(cursor):
         else:
             i.back_action()
 
-class player_point:
+class player_pointer:
     def __init__(self,name,img,now_point):
         self.name = name
         self.img = img
@@ -628,7 +628,7 @@ levelentity_range_list = [
     ((1237,1639),(242,485))
 ]
 
-levelentity_range_list = [
+levelentity_seter_list = [
     "easy",
     "normal",
     "hard"
@@ -645,14 +645,25 @@ modebuttonentity_range_list = [
     ((524,1398),(734,1006))
 ]
 
+modebuttonentity_seter_list = [
+    "play",
+    "play"
+]
+
 level_entity_list = []
 for i in range(len(level_file_list)):
-    new_level_entity = level_entitys(level_file_list[i],level_list[i],levelentity_drawpoint_list[i],levelentity_range_list[i],levelentity_range_list[i])
+    new_level_entity = level_entitys(level_file_list[i],level_list[i],levelentity_drawpoint_list[i],levelentity_range_list[i],levelentity_seter_list[i])
     level_entity_list.append(new_level_entity)
 
 mode_button_entity_list = []
 for i in range(len(start_button_file_list)):
-    new_mode_button_entity = mode_button_entity(start_button_file_list[i],start_button_list[i])
+    new_mode_button_entity = mode_button_entity(start_button_file_list[i],start_button_list[i],modebuttonentity_drawpoint_list[i],modebuttonentity_range_list[i],modebuttonentity_seter_list[i])
+    mode_button_entity_list.append(new_mode_button_entity)
+
+player_pointer_list = []
+for i in range(len(player_circle_file_list)):
+    new_player_pointer_list = player_pointer(player_circle_file_list[i],player_circle_list[i],(0,0))
+    player_pointer_list.append(new_player_pointer_list)
 
 
     
