@@ -94,11 +94,9 @@ for filename in comment_file_list:
     comment_list.append(newimage)
 
 for filename in player_circle_file_list:
-for filename in player_circle_file_list:
     image = pygame.image.load(filename)
     scale = circle_size / image.get_width()
     newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
-    player_circle_list.append(newimage)
     player_circle_list.append(newimage)
 
 for filename in level_file_list:
