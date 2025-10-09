@@ -457,17 +457,16 @@ class set_check_entity:
 
         id_counter += 1
 
-
 class edge_marker(set_check_entity):
     def __init__(self,id,task,draw_point,now_point):
         super().__init__(task,draw_point,now_point,None)
-        self.id = id
+        self.name = name
 
 class check_player(set_check_entity):
-    def __init__(self,id,task,draw_point,now_point,img):
+    def __init__(self,name,task,draw_point,now_point,img):
         super().__init__(task,draw_point,now_point,img)
         self.img = img
-        self.id = id
+        self.name = name
 
 def markers_checker():
     for i in set_entity_list:
@@ -513,7 +512,7 @@ class level_entitys(menu_entity):
 
 class mode_button_entity(menu_entity):
     def __init__(self,name,img,draw_point,pushrange,mode_seter):
-        if self.name == "start_button.png":
+        if name == "start_button.png":
             defa_clear = 255 #エンティティーの初期透明度の指定　min:0 max:255
 
         else:
@@ -543,10 +542,7 @@ class mode_button_entity(menu_entity):
 
 def push_checker(cursor):
     for i in menu_entity_list: #aから始まるものはアンダー（底辺）に当たる座標。tから始まるものはトップ（上底）に当たる座標。
-        x , y = i.range
-        a_x , t_x = x
-        a_y , t_y = y
-
+        a_x , t_x , a_y , t_y = i.pushrange
         c_x , c_y = cursor
 
         if a_x <= c_x <= t_x and a_y <= c_y <= t_y:
@@ -555,18 +551,6 @@ def push_checker(cursor):
         else:
             i.back_action()
 
-class player_pointer:
-    def __init__(self,name,img,now_point):
-        self.name = name
-        self.img = img
-        self.now_point = now_point
-
-
-
-    
-
-
-
 def p(text,time):
     if time == "n":
         print(text)
@@ -574,7 +558,38 @@ def p(text,time):
 
     if time % 50 == 0:
         print(text)
-    
+
+def marker_screen_seter(ret, frame):
+    ret, frame = cap.read()
+
+    if ret:
+        markers, ids, rejected = aruco_detector.detectMarkers(frame)
+
+        if ids is not None:
+
+            for i in range(len(markers)):
+                ID = ids[i]
+                C1 = markers[i][0][0]
+                C2 = markers[i][0][1]
+                C3 = markers[i][0][2]
+                C4 = markers[i][0][3]
+                ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
+
+                for j in set_entity_list:
+                    p(type(j),"n")
+                    p(int(ID),"n")
+                    if j.check_id == int(ID):
+                        j.now_point = ave
+                        j.count += 1
+
+                        if j.check_id <= 4:
+                            j.now_point = ave
+                            pygame.draw.circle(check_surface, (255,0,0),(j.draw_point), 30)
+
+                        else:
+                            j.now_point = player_chege_point(ave)
+                            screen.blit(j.img,j.draw_point)
+
 
 
 #いらないかも
@@ -603,14 +618,14 @@ marker_set_list = [
 
 edge_marker_list = []
 for i in range(len(player_set_list)): # 0:blue_feet 1:blue_hand 2:red_feet 3:red_hand
-    new_players = edge_marker(i, 5 ,marker_set_list[i],(0,0)) #ここの数字で0.2秒間に読み取る目標を設定する。
+    new_players = edge_marker(5 ,marker_set_list[i],(0,0)) #ここの数字で0.2秒間に読み取る目標を設定する。
     edge_marker_list.append(new_players)
 #    set_entity_list.append(new_players)
 
 
 player_marker_list = []
 for i in range(len(player_set_list)): # 0:blue_feet 1:blue_hand 2:red_feet 3:red_hand
-    new_players = check_player(i, 5 ,player_set_list[i],(0,0),player_circle_list[i]) #ここの数字で0.2秒間に読み取る目標を設定する。
+    new_players = check_player(player_circle_file_list[i] , 5 ,player_set_list[i],(0,0),player_circle_list[i]) #ここの数字で0.2秒間に読み取る目標を設定する。
     player_marker_list.append(new_players)
 
 set_entity_list = edge_marker_list + player_marker_list
@@ -623,9 +638,9 @@ levelentity_drawpoint_list = [
 ]
 
 levelentity_range_list = [
-    ((277,679),(242,485))
-    ((757,1159),(242,485))
-    ((1237,1639),(242,485))
+    (277,679,242,485),
+    (757,1159,242,485),
+    (1237,1639,242,485)
 ]
 
 levelentity_seter_list = [
@@ -636,12 +651,12 @@ levelentity_seter_list = [
 
 
 modebuttonentity_drawpoint_list = [
-    ((screen_width / 2) -500,(screen_height * 4 / 5) -278)
+    ((screen_width / 2) -500,(screen_height * 4 / 5) -278),
     ((screen_width / 2) -500,(screen_height * 4 / 5) -278)
 ]
 
 modebuttonentity_range_list = [
-    ((524,1398),(734,1006))
+    ((524,1398),(734,1006)),
     ((524,1398),(734,1006))
 ]
 
@@ -780,10 +795,17 @@ while running:
 
         count += 1
         if use_aruco:
+            for i in player_marker_list:
+                if i.name == "赤足.png":
+                    coo = i.now_point
             coo = red_feet
             print(f"coo{coo}")
         else:
             coo = pygame.mouse.get_pos()
+
+        push_checker(coo)
+
+            
             
         coo_x,coo_y= coo
  
