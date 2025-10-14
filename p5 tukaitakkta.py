@@ -44,7 +44,7 @@ screen = pygame.display.set_mode((screen_width, screen_height),pygame.FULLSCREEN
 
 #変更可
 
-fps = 100#一秒間に起きる画面更新の回数
+fps = 100#一秒間に画面更新をする回数
 
 split_varue = 20 #円が出てくるマス目の細かさ
 
@@ -57,11 +57,11 @@ comment_list = []
 circle_size = 180#表示される円の大きさ
 
 
-level_button_frame_size = 1800#レベルを囲んでいる枠の大きさ
+level_frame_size = 1800#レベルを囲んでいる枠の大きさ
 
 level_size = 600#難易度boxの大きさ
 
-start_button_size = 1000#スタートボタンの大きさ
+button_size = 1000#スタートボタンの大きさ
 
 edge_range = 3 #外周と生成円の距離HTMLのpaddingのノリ
 
@@ -74,40 +74,11 @@ level_list = []
 start_button_file_list = ["start_button.png" , "start_button_frame.png"]
 start_button_list = []
 
+
 design_file_list = [
     ("level_frame.png",1800)
 ]
 design_list = [] 
-
-for filename in comment_file_list:
-    image = pygame.image.load(filename)
-    scale = comment_size / image.get_width()
-    newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
-    comment_list.append(newimage)
-
-for filename in level_file_list:
-    image = pygame.image.load(filename)
-    scale = level_size / image.get_width()
-    newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale)) 
-    level_list.append(newimage)
-
-for filename in start_button_file_list:
-    image = pygame.image.load(filename)
-    scale = start_button_size / image.get_width()
-    scale = start_button_size / image.get_width()
-    newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale)) 
-    start_button_list.append(newimage)
-
-
-for n,s in design_file_list: 
-    image = pygame.image.load(n)
-    scale = s / image.get_width()
-    new_dsign_entity = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
-    design_list.append(new_dsign_entity)
-
-
-screen_img_list = start_button_list + level_list
-screen_name_list = start_button_file_list + level_file_list
 
 mode = "set"
 
@@ -135,9 +106,6 @@ split_screen_y = screen_height / split_varue
 mouse_x = 0
 mouse_y = 0
 
-del_target_circle = "nan"
-
-font = pygame.font.SysFont('Arial', 72)
 comment_x = 0
 comment_y = 0
 comment_text = ""
@@ -153,25 +121,25 @@ hard_count = 55
 
 start_count = 0
 
-del_target_comment = "nan"
-
 #surfaceの設定
 pygame.display.set_caption("デジタル体育")
 
-menu_surface = pygame.Surface((screen_width,screen_height), pygame.SRCALPHA)
+front_surface = pygame.Surface((screen_width,screen_height), pygame.SRCALPHA)
 
-effect_surface = pygame.Surface((screen_width,screen_height), pygame.SRCALPHA)
+middle_surface = pygame.Surface((screen_width,screen_height), pygame.SRCALPHA)
 
-circle_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
+back_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
 
-comment_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
 
-check_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
 
-cursor_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
+# comment_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
 
-move_entity_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
-back_entity_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
+# check_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
+
+# cursor_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
+
+# move_entity_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
+# back_entity_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
 
 left_top = (0,0)
 right_top = (0,0)
@@ -200,7 +168,7 @@ if mode == "play":
 
 def spotlight(point):
     x , y = point
-    pygame.draw.circle(cursor_surface,(255,255,255,200),(x,y),25)
+    pygame.draw.circle(front_surface,(255,255,255,200),(x,y),25)
 
 def random_color():
     return (random.randint(0,255),random.randint(0,255),random.randint(0,255))
@@ -376,6 +344,12 @@ def player_chege_point(player):
 
     return mouse_x , mouse_y
 
+def image_changer(img_name,size):
+    img = pygame.image.load(img_name)
+    scale = size / img.get_width()
+    img_data = pygame.transform.scale(img, (img.get_width()*scale, img.get_height()*scale))
+    return img_data
+
 
 effect_circle_list = []
 
@@ -389,8 +363,8 @@ class effect_circle:
         self.r,self.g,self.b = random_color()
     
     def draw(self):
-        pygame.draw.circle(effect_surface,(self.r,self.g,self.b,self.clear),(self.x,self.y),self.size)
-        pygame.draw.circle(effect_surface,(0,0,0,0),(self.x,self.y),self.size - 4)
+        pygame.draw.circle(back_surface,(self.r,self.g,self.b,self.clear),(self.x,self.y),self.size)
+        pygame.draw.circle(back_surface,(0,0,0,0),(self.x,self.y),self.size - 4)
 
         self.size += screen_width / 200
         self.clear -= 1
@@ -400,29 +374,39 @@ class effect_circle:
 
 clock = pygame.time.Clock()
 
-class set_check_entity:
-    def __init__(self,check_id,task,draw_point,img):
+
+
+class set_entity:
+    def __init__(self,marker_id,draw_point,img,task):
         self.count = 0
-
         self.task = task
-        self.check_id = check_id
+        self.marker_id = marker_id
         self.draw_point = draw_point
-        self.now_point = (0,0)
+        self.now_point = (0,0) #プレイヤーの位置を特定するのに必要な値（初期値）
         self.img = img
 
 
-class edge_marker(set_check_entity):
-    def __init__(self,check_id,name,draw_point):
-        super().__init__(check_id,5,draw_point,None)#ここの数字で0.2秒間に読み取る目標を設定する。
+
+class edge_marker(set_entity):
+    def __init__(self,marker_id,name,draw_point):
+        goal = 5 #0.2秒間に読み取る目標を設定する。
+
+        super().__init__(marker_id,draw_point,None,goal)
+
         self.name = name
 
-class check_player(set_check_entity):
-    def __init__(self,check_id,name,draw_point,img):
-        super().__init__(check_id,5,draw_point,img)#ここの数字で0.2秒間に読み取る目標を設定する。
-        self.img = img
-        self.name = name
 
-def markers_checker():
+
+class check_player(set_entity):
+    def __init__(self,marker_id,img_name,size,draw_point):
+        img = image_changer(img_name,size)
+        goal = 5 #0.2秒間に読み取る目標を設定する。
+
+        super().__init__(marker_id,draw_point,img,goal)
+
+
+
+def count_checker():
     for i in set_entity_list:
         if i.count >= i.task:
             continue
@@ -432,40 +416,64 @@ def markers_checker():
             return False
     return True
 
-class level_entitys:
-    def __init__(self,name,img,draw_point,pushrange,level_seter):
+
+
+class menu_entity:
+    def __init__(self,img_name,img,draw_point,defa_clear,move):
+        self.img_name = img_name
+        self.img = img
+        self.draw_point = draw_point
+        self.defa_clear = defa_clear#初めの透明度をメモしておく
+        self.now_clear = defa_clear#今の透明度を表す値
+        self.move = move#動くエンティティーかどうか(surfaceを区別する為)
+
+
+
+class level_entitys(menu_entity):
+    def __init__(self,img_name,size,draw_point,push_range,level_seter):
         defa_clear = 50 #エンティティーの初期透明度の指定　min:0 max:255
         move = True
+        img = image_changer(img_name,size)
 
-        self.name = name
-        self.img = img 
-        self.draw_point = draw_point
-        self.pushrange = pushrange
-        self.move = move
+        super().__init__(img_name,img,draw_point,defa_clear,move)
+
+        self.push_range = push_range
         self.level_seter = level_seter
-        self.clear = defa_clear
-        self.defa_clear = defa_clear
-        self.count = 0
+        self.now_chews = False#今選択されているクラスであるかどうか。
+
 
     def action(self):
-        self.clear += 1
-        if self.clear > 255:
-            self.clear = 255
+        self.now_clear += 1
+        if self.now_clear > 255:
+            self.now_clear = 255
+
+            for i in level_entity_list:
+                i.now_chews = False
+            self.now_chews = True
+
             global difficulty_level
             difficulty_level = self.level_seter
 
+
     def back_action(self):
-        self.clear -= 1
-        if self.clear < self.defa_clear:
-            self.clear = self.defa_clear
-
-class menu_back_entity:
-    def __init__
+        if self.now_chews:
+            self.now_clear -= 1
+            if self.now_clear < self.defa_clear:
+                self.now_clear = self.defa_clear
 
 
-class mode_button_entity:
-    def __init__(self,name,img,draw_point,pushrange,mode_seter):
-        if name == "start_button.png":
+
+class back_entity(menu_entity):
+    def __init__(self,img_name,size,draw_point):
+        defa_clear = 255
+        move = False
+        img = image_changer(img_name,size)
+        super().__init__(img_name,img,draw_point,defa_clear,move)
+
+
+class start_button_entity(menu_entity):
+    def __init__(self,img_name,size,draw_point,push_range,mode_seter):
+        if img_name == "start_button.png":
             defa_clear = 255 #エンティティーの初期透明度の指定　min:0 max:255
             move = False
 
@@ -473,44 +481,42 @@ class mode_button_entity:
             defa_clear = 0 #エンティティーの初期透明度の指定　min:0 max:255
             move = True
 
+        img = image_changer(img_name,size)
+        super().__init__(img_name,img,draw_point,defa_clear,move)
+
         self.mode_seter = mode_seter
+        self.push_range = push_range
+
         self.count = 0
-        self.clear = defa_clear
-        self.defa_clear = defa_clear
-        self.name = name
-        self.img = img 
-        self.draw_point = draw_point
-        self.pushrange = pushrange
-        self.move = move
-
+        
     def action(self):
-        if self.name == "start_button_frame.png":
-            self.claer += 1
-            if self.clear > 255:
-                self.clear = 255
-                global mode
-                global circle_time
-                mode = self.mode_seter
-                if difficulty_level == "easy":
-                    circle_time = 10
+        self.now_clear += 1
+        if self.now_clear > 255:
+            self.now_clear = 255
+            global mode
+            global circle_time
+            mode = self.mode_seter
 
-                if difficulty_level == "normal":
-                    circle_time = 7
+            if difficulty_level == "easy":
+                circle_time = 10
 
-                if difficulty_level == "hard":
-                    circle_time = 5
+            if difficulty_level == "normal":
+                circle_time = 7
+
+            if difficulty_level == "hard":
+                circle_time = 5
+
 
     def back_action(self):
-        if self.name == "start_button_frame.png":
-            self.clear -= 1
-            if self.clear < self.defa_clear:
-                self.clear = self.defa_clear
+        self.now_clear -= 1
+        if self.now_clear < self.defa_clear:
+            self.now_clear = self.defa_clear
 
             
 
 def push_checker(cursor,entity):
      #aから始まるものはアンダー（底辺）に当たる座標。tから始まるものはトップ（上底）に当たる座標。
-        a_x , t_x , a_y , t_y = entity.pushrange
+        a_x , t_x , a_y , t_y = entity.push_range
         c_x , c_y = cursor
 
         if a_x <= c_x <= t_x and a_y <= c_y <= t_y:
@@ -527,7 +533,7 @@ def p(text,time):
     if time % 50 == 0:
         print(text)
 
-def marker_screen_seter(ret, frame , mode):
+def position_manager(ret, frame, mode):
         markers, ids, rejected = aruco_detector.detectMarkers(frame)
         if ids is not None:
 
@@ -540,136 +546,74 @@ def marker_screen_seter(ret, frame , mode):
                 ave = int((C1[0] + C2[0] + C3[0] + C4[0]) / 4) , int((C1[1] + C2 [1] + C3[1] + C4[1]) / 4)
 
                 for j in set_entity_list:
-                    if j.check_id == int(ID):
+                    if j.marker_id == int(ID):
                         if mode == "set":
                             j.count += 1
-                            if j.check_id <= 4:
-                                pygame.draw.circle(check_surface, (255,0,0),(j.draw_point), 30)
+                            if j.marker_id <= 4:
+                                pygame.draw.circle(back_surface, (255,0,0),(j.draw_point), 30)
 
                             else:
-                                screen.blit(j.img,j.draw_point)
+                                back_surface.blit(j.img,j.draw_point)
 
-                        if j.check_id <= 4:
+                        if int(ID) <= 4:#1~4までのIDは隅の四点に設置しているマーカー
                             j.now_point = ave
 
-                        else:
+                        else:#5~8までのIDはプレイヤーの四肢に装着しているマーカー
                             j.now_point = player_chege_point(ave)
 
-            return True
-        else:
-            return False
+
+
+def menu_manager(cursor):
+    for i in menu_entity_list:
+        if i.move:
+            push_checker(cursor,i)
+        
+        draw_x , draw_y = i.draw_point
+        middle_surface.blit(i.img, (draw_x , draw_y))
 
 
 
-#いらないかも
-left_top = int(screen_width * 0.1),int(screen_height * 0.1)
-right_top = int(screen_width * 0.9),int(screen_height * 0.1)
-right_bottom = int(screen_width * 0.9),int(screen_height * 0.9)
-left_bottom = int(screen_width * 0.1),int(screen_height * 0.9)
-blue_feet = (screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50
-blue_hand = (screen_width * 4 // 9) - 90,(screen_height * 2 // 9) - 50
-red_feet = (screen_width * 5 // 9) - 90,(screen_height * 1 // 9) - 50
-red_hand = (screen_width * 5 // 9) - 90,(screen_height * 2 // 9) - 50
-
-edge_marker_set_list = [
-    [int(screen_width * 0.1),int(screen_height * 0.1)],
-    [int(screen_width * 0.9),int(screen_height * 0.1)],
-    [int(screen_width * 0.9),int(screen_height * 0.9)],
-    [int(screen_width * 0.1),int(screen_height * 0.9)],
+edge_marker_list = [
+    edge_marker(1,"left_top",[int(screen_width * 0.1),int(screen_height * 0.1)]),
+    edge_marker(2,"right_top",[int(screen_width * 0.9),int(screen_height * 0.1)]),
+    edge_marker(3,"right_buttom",[int(screen_width * 0.9),int(screen_height * 0.9)]),
+    edge_marker(4,"left_buttom",[int(screen_width * 0.1),int(screen_height * 0.9)])
 ]
-
-edge_marker_name_list = [
-    "left_top",
-    "right_top",
-    "right_buttom",
-    "left_buttom"
-]
-
-
-edge_marker_list = []
-for i in range(len(player_set_list)): # 0:blue_feet 1:blue_hand 2:red_feet 3:red_hand
-    new_players = edge_marker(edge_marker_name_list,edge_marker_set_list[i])#座標の初期値x=0,y=0
-    edge_marker_list.append(new_players)
 
 player_marker_list = [
-    check_player(5,"青足.png",[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50],pygame.transform.scale("青足.png", (circle_size, circle_size))),
-    check_player(6,"赤足.png",[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50],pygame.transform.scale("赤足.png", (circle_size, circle_size))),
-    check_player(7,"青手.png",[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50],pygame.transform.scale("青手.png", (circle_size, circle_size))),
-    check_player(8,"赤手.png",[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50],pygame.transform.scale("赤手.png", (circle_size, circle_size))),
+    check_player(5,"青足.png",circle_size,[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50]),
+    check_player(6,"赤足.png",circle_size,[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50]),
+    check_player(7,"青手.png",circle_size,[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50]),
+    check_player(8,"赤手.png",circle_size,[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50])
 ]
 
-set_entity_list = edge_marker_list + player_marker_list
+set_entity_list = edge_marker_list + player_marker_list #セットモードで使うリスト
 
-levelentity_drawpoint_list = [
-    ((screen_width * 3 / 12) -300,(screen_height / 3) - 167),
-    ((screen_width * 6 / 12) -300,(screen_height / 3) - 167),
-    ((screen_width * 9 / 12) -300,(screen_height / 3) - 167)
+level_entity_list = [
+    level_entitys("easy.png",level_size,((screen_width * 3 / 12) -300,(screen_height / 3) - 167),(277,679,242,485),"easy"),
+    level_entitys("normal.png",level_size,((screen_width * 6 / 12) -300,(screen_height / 3) - 167),(757,1159,242,485),"normal"),
+    level_entitys("hard.png",level_size,((screen_width * 9 / 12) -300,(screen_height / 3) - 167),(1237,1639,242,485),"hard")
+
 ]
 
-levelentity_range_list = [
-    (277,679,242,485),
-    (757,1159,242,485),
-    (1237,1639,242,485)
+start_button_list = [
+    start_button_entity("start_button.png",button_size,((screen_width / 2) -500,(screen_height * 4 / 5) -278),None,None),
+    start_button_entity("start_button_frame.png",button_size,((screen_width / 2) -500,(screen_height * 4 / 5) -278),(524,1398,734,1006),"play")
 ]
 
-levelentity_seter_list = [
-    "easy",
-    "normal",
-    "hard"
+back_entity_list = [
+    back_entity("level_frame.png",level_frame_size,((screen_width / 2) - 900,(screen_height / 2) - 500))
 ]
 
-
-modebuttonentity_drawpoint_list = [
-    ((screen_width / 2) -500,(screen_height * 4 / 5) -278),
-    ((screen_width / 2) -500,(screen_height * 4 / 5) -278)
-]
-
-modebuttonentity_range_list = [
-    ((524,1398),(734,1006)),
-    ((524,1398),(734,1006))
-]
-
-modebuttonentity_seter_list = [
-    "play",
-    "play"
-]
-
-design_entitydrawpoint_list = [
-    ((screen_width / 2) - 900,(screen_height / 2) - 500)
-]
-
-level_entity_list = []
-for i in range(len(level_file_list)):
-    new_level_entity = level_entitys(level_file_list[i],level_list[i],levelentity_drawpoint_list[i],levelentity_range_list[i],levelentity_seter_list[i])
-    level_entity_list.append(new_level_entity)
-
-mode_button_entity_list = []
-for i in range(len(start_button_file_list)):
-    new_mode_button_entity = mode_button_entity(start_button_file_list[i],start_button_list[i],modebuttonentity_drawpoint_list[i],modebuttonentity_range_list[i],modebuttonentity_seter_list[i])
-    mode_button_entity_list.append(new_mode_button_entity)
-
-mode_design_entity_list = []
-for i in range(len(design_list)):
-    new_mode_button_entity_list = menu_entity(design_file_list[i],design_list[i],design_entitydrawpoint_list[i],None,False)
-    mode_design_entity_list.append(new_mode_button_entity)
-
-menu_entity_list = level_entity_list + mode_button_entity_list + mode_design_entity_list
+menu_entity_list = level_entity_list + start_button_list + back_entity_list #メニューモードで使うリスト
 
 
-    # design_listこれをクラスに噛ませる
 
 aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
 aruco_params = cv2.aruco.DetectorParameters()
 aruco_detector = cv2.aruco.ArucoDetector(aruco_dict, aruco_params)
 
 cap = cv2.VideoCapture(0)
-
-
-left_top = ()
-right_top = ()
-right_bottom = ()
-left_bottom = ()
-player = ()
 
 if use_aruco:
     ret, frame = cap.read()
@@ -700,41 +644,32 @@ while running:
 
     #描写のリセット
     screen.fill((50,50,50))
-    circle_surface.fill((0,0,0,0))
-    comment_surface.fill((0,0,0,0))
-    cursor_surface.fill((0,0,0,0))
-    menu_surface.fill((0,0,0,0))
+    front_surface.fill((0,0,0,0))
+    middle_surface.fill((0,0,0,0))
+    back_surface.fill((0,0,0,0))
 
     if mode == "set":
         if use_aruco:
             count += 1
-            check_surface.fill((0,0,0,0))
 
-            pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
-
-            pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.9),int(screen_height * 0.1)), 30)
-
-            pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.9),int(screen_height * 0.9)), 30)
-
-            pygame.draw.circle(check_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
-
+            pygame.draw.circle(back_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
+            pygame.draw.circle(back_surface, (255,255,255),(int(screen_width * 0.9),int(screen_height * 0.1)), 30)
+            pygame.draw.circle(back_surface, (255,255,255),(int(screen_width * 0.9),int(screen_height * 0.9)), 30)
+            pygame.draw.circle(back_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
 
             ret, frame = cap.read()
-
             if ret:
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 frame = numpy.rot90(frame) 
                 opencv_cap_surface = pygame.surfarray.make_surface(frame)
-                screen.blit(opencv_cap_surface,(screen_width / 2 - 340,screen_height * 2 / 3 - 204))
+                screen.blit(opencv_cap_surface,(screen_width / 2 - 340,screen_height * 2 / 3 - 204))#カメラ視点の映像を映す
 
                 if count % 5 == 0:
-                    marker_screen_seter(ret, frame ,"set")
+                    position_manager(ret, frame,"set")
 
                 if count % 100 == 0:
-                    if markers_checker():
+                    if count_checker():
                         mode = "menu"
-
-            screen.blit(check_surface,(0,0))
 
         else:
             mode = "menu"
@@ -743,23 +678,17 @@ while running:
 
         count += 1
         if use_aruco:
+            player_cursor = pygame.mouse.get_pos()
+
+        else:
             for i in player_marker_list:
-                if i.name == "赤足.png":
-                    coo = i.now_point
-            print(f"coo{coo}")
-
-        coo_x,coo_y = coo
+                if i.img_name == "赤足.png":
+                    player_cursor = i.now_point
  
-        spotlight(coo)
+        spotlight(player_cursor)
 
-        for i in menu_entity_list:
-            if i.move:
-                draw_x , draw_y = i.draw_point
-                move_entity_surface.blit(i.img, (draw_x , draw_y))
-                push_checker(coo,i)
-            
-            else:
-                back_entity_surface.blit(i.img, (draw_x , draw_y))
+        menu_manager(player_cursor)#描画+エンティティーの動きを担当。
+
 
         # level_list[0].set_alpha(easy_count)
         # level_list[1].set_alpha(normal_count)
@@ -822,11 +751,11 @@ while running:
         
     #     screen.blit(comment_surface,(0,0))
 
-    #     screen.blit(effect_surface,(0,0))
+    screen.blit(back_surface,(0,0))
 
-    #     screen.blit(circle_surface,(0,0))
+    screen.blit(middle_surface,(0,0))
 
-    #     screen.blit(cursor_surface,(0,0))
+    screen.blit(front_surface,(0,0))
 
     pygame.display.update() 
 
