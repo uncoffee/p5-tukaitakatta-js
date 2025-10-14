@@ -48,14 +48,17 @@ fps = 100#一秒間に画面更新をする回数
 
 split_varue = 20 #円が出てくるマス目の細かさ
 
-use_aruco = True #True:設定したarucoマーカを追尾　False:マウスカードルを追尾
+use_aruco = False #True:設定したarucoマーカを追尾　False:マウスカードルを追尾
 
 comment_size = 200 #コメントのサイズを指定する
 comment_file_list = ["good.png"] #コメントのバリエーション　追加可能
 comment_list = []
 
-circle_size = 180#表示される円の大きさ
+edge_range = 3 #外周と生成円の距離HTMLのpaddingのノリ
 
+count_down_time = 2 #画面が切り替わった後の待機時間
+
+circle_size = 180#表示される円の大きさ
 
 level_frame_size = 1800#レベルを囲んでいる枠の大きさ
 
@@ -63,10 +66,9 @@ level_size = 600#難易度boxの大きさ
 
 button_size = 1000#スタートボタンの大きさ
 
-edge_range = 3 #外周と生成円の距離HTMLのpaddingのノリ
-
 
 #変更不可
+count_down_time *= fps
 
 level_file_list = ["easy.png" , "normal.png" , "hard.png"] #難易度のバリエーション
 level_list = []
@@ -103,23 +105,10 @@ new_circle_y = 0
 split_screen_x = screen_width / split_varue
 split_screen_y = screen_height / split_varue
 
-mouse_x = 0
-mouse_y = 0
-
 comment_x = 0
 comment_y = 0
 comment_text = ""
 comment_q = []
-
-coo = ()
-coo_x = 0
-coo_y = 0
-
-easy_count = 255
-normal_count = 55
-hard_count = 55
-
-start_count = 0
 
 #surfaceの設定
 pygame.display.set_caption("デジタル体育")
@@ -173,9 +162,13 @@ def spotlight(point):
 def random_color():
     return (random.randint(0,255),random.randint(0,255),random.randint(0,255))
 
+def set_color(color,change_value):
+    for i in range(len(color)):
+        color[i] -= change_value
+        if color[i] < 0:
+            color[i] = 0
 
-x_list = []
-
+    return color
 
 team = 4
 
@@ -191,7 +184,7 @@ def backcolor(h,s,v):
 
     #cps　「1秒間に～」の間隔 後で単位を調整したい　下のコメントチェック
 default_size = 50#最終円のサイズ指定
-class make_circle:
+class play_screen:
     def __init__ (self,x,y,cps,circle_id):
         self.alive = True
         self.age = 0
@@ -274,6 +267,20 @@ class make_circle:
         circle_list[self.circle_id].set_alpha(self.clear)
         screen.blit(circle_list[self.circle_id], (self.x - 90, self.y - 50))
 
+def random_position(length):
+    return random.randint(0 + length / split_varue, 0 - length / split_varue)
+
+def make_circle():
+    if len(play_circle_list) <= 0:
+        x = (random_position(screen_width))
+        y = (random_position(screen_height))
+
+    else:
+        while abs(new_circle_x - last_circle_x) <= split_screen_x * 5 and abs(new_circle_y - last_circle_y) <= split_screen_y * 5:
+            new_circle_x = random.randint(edge_range,split_varue - edge_range) * split_screen_x
+            new_circle_y = random.randint(edge_range,split_varue - edge_range) * split_screen_y
+        new_circle = make_circle(new_circle_x,new_circle_y,circle_time,random.randint(0,len(circle_list) - 1))
+
 class tap_comment:
 
     def __init__(self,x,y,text):
@@ -315,6 +322,7 @@ def change_y(A, B, now):
 def player_chege_point(player):
     mouse_y = 0
     mouse_x = 0
+    
     if use_aruco:
 
         try:
@@ -339,10 +347,7 @@ def player_chege_point(player):
             if count % 50 == 0:
                 print("eroDivisionError")
 
-    else:
-        mouse_x , mouse_y = pygame.mouse.get_pos()
-
-    return mouse_x , mouse_y
+        return mouse_x , mouse_y
 
 def image_changer(img_name,size):
     img = pygame.image.load(img_name)
@@ -443,7 +448,7 @@ class level_entitys(menu_entity):
 
 
     def action(self):
-        self.now_clear += 1
+        self.now_clear += 5 #この値でどれくらい長押し？すればアクションが起きるかを設定できる。
         if self.now_clear > 255:
             self.now_clear = 255
 
@@ -456,10 +461,11 @@ class level_entitys(menu_entity):
 
 
     def back_action(self):
-        if self.now_chews:
-            self.now_clear -= 1
+        if not self.now_chews:
+            self.now_clear -= 5
             if self.now_clear < self.defa_clear:
                 self.now_clear = self.defa_clear
+        
 
 
 
@@ -490,7 +496,7 @@ class start_button_entity(menu_entity):
         self.count = 0
         
     def action(self):
-        self.now_clear += 1
+        self.now_clear += 3
         if self.now_clear > 255:
             self.now_clear = 255
             global mode
@@ -508,11 +514,11 @@ class start_button_entity(menu_entity):
 
 
     def back_action(self):
-        self.now_clear -= 1
+        self.now_clear -= 3
         if self.now_clear < self.defa_clear:
             self.now_clear = self.defa_clear
 
-            
+
 
 def push_checker(cursor,entity):
      #aから始まるものはアンダー（底辺）に当たる座標。tから始まるものはトップ（上底）に当たる座標。
@@ -534,42 +540,47 @@ def p(text,time):
         print(text)
 
 def position_manager(ret, frame, mode):
-        markers, ids, rejected = aruco_detector.detectMarkers(frame)
-        if ids is not None:
+    markers, ids, rejected = aruco_detector.detectMarkers(frame)
+    if ids is not None:
 
-            for i in range(len(markers)):
-                ID = ids[i]
-                C1 = markers[i][0][0]
-                C2 = markers[i][0][1]
-                C3 = markers[i][0][2]
-                C4 = markers[i][0][3]
-                ave = int((C1[0] + C2[0] + C3[0] + C4[0]) / 4) , int((C1[1] + C2 [1] + C3[1] + C4[1]) / 4)
+        for i in range(len(markers)):
+            ID = ids[i]
+            C1 = markers[i][0][0]
+            C2 = markers[i][0][1]
+            C3 = markers[i][0][2]
+            C4 = markers[i][0][3]
+            ave = int((C1[0] + C2[0] + C3[0] + C4[0]) / 4) , int((C1[1] + C2 [1] + C3[1] + C4[1]) / 4)
 
-                for j in set_entity_list:
-                    if j.marker_id == int(ID):
-                        if mode == "set":
-                            j.count += 1
-                            if j.marker_id <= 4:
-                                pygame.draw.circle(back_surface, (255,0,0),(j.draw_point), 30)
+            for j in set_entity_list:
+                if j.marker_id == int(ID):
+                    if mode == "set":
+                        j.count += 1
+                        if j.marker_id <= 4:
+                            pygame.draw.circle(back_surface, (255,0,0),(j.draw_point), 30)
 
-                            else:
-                                back_surface.blit(j.img,j.draw_point)
+                        else:
+                            back_surface.blit(j.img,j.draw_point)
 
-                        if int(ID) <= 4:#1~4までのIDは隅の四点に設置しているマーカー
-                            j.now_point = ave
+                    if int(ID) <= 4:#1~4までのIDは隅の四点に設置しているマーカー
+                        j.now_point = ave
 
-                        else:#5~8までのIDはプレイヤーの四肢に装着しているマーカー
-                            j.now_point = player_chege_point(ave)
+                    else:#5~8までのIDはプレイヤーの四肢に装着しているマーカー
+                        j.now_point = player_chege_point(ave)
+
 
 
 
 def menu_manager(cursor):
     for i in menu_entity_list:
+        draw_x , draw_y = i.draw_point
+        i.img.set_alpha(i.now_clear)
+
         if i.move:
             push_checker(cursor,i)
-        
-        draw_x , draw_y = i.draw_point
-        middle_surface.blit(i.img, (draw_x , draw_y))
+            middle_surface.blit(i.img, (draw_x , draw_y))
+
+        else:
+            back_surface.blit(i.img, (draw_x , draw_y))
 
 
 
@@ -581,10 +592,10 @@ edge_marker_list = [
 ]
 
 player_marker_list = [
-    check_player(5,"青足.png",circle_size,[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50]),
-    check_player(6,"赤足.png",circle_size,[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50]),
+    check_player(5,"青足.png",circle_size,[(screen_width * 5 // 9) - 90,(screen_height * 1 // 9) - 50]),
+    check_player(6,"赤足.png",circle_size,[(screen_width * 5 // 9) - 90,(screen_height * 2 // 9) - 50]),
     check_player(7,"青手.png",circle_size,[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50]),
-    check_player(8,"赤手.png",circle_size,[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50])
+    check_player(8,"赤手.png",circle_size,[(screen_width * 4 // 9) - 90,(screen_height * 2 // 9) - 50])
 ]
 
 set_entity_list = edge_marker_list + player_marker_list #セットモードで使うリスト
@@ -606,6 +617,8 @@ back_entity_list = [
 ]
 
 menu_entity_list = level_entity_list + start_button_list + back_entity_list #メニューモードで使うリスト
+
+count_entity = count_down()
 
 
 
@@ -675,19 +688,27 @@ while running:
             mode = "menu"
 
     if mode == "menu":
-
-        count += 1
         if use_aruco:
-            player_cursor = pygame.mouse.get_pos()
+            for i in player_marker_list:
+                if i.marker_id == 6:#marker_idの6は"赤足.png"
+                    player_cursor = i.now_point
 
         else:
-            for i in player_marker_list:
-                if i.img_name == "赤足.png":
-                    player_cursor = i.now_point
+            player_cursor = pygame.mouse.get_pos()
+
+        count += 1
  
         spotlight(player_cursor)
 
         menu_manager(player_cursor)#描画+エンティティーの動きを担当。
+
+    if mode == "play":
+        count += 1
+        if not count <= count_down_time:
+            if count % 600 == 0:
+                make_circle()
+
+
 
 
         # level_list[0].set_alpha(easy_count)
