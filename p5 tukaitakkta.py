@@ -55,25 +55,18 @@ comment_file_list = ["good.png"] #コメントのバリエーション　追加�
 comment_list = []
 
 circle_size = 180#表示される円の大きさ
-circle_size = 180#表示される円の大きさ
+
+
+level_button_frame_size = 1800#レベルを囲んでいる枠の大きさ
 
 level_size = 600#難易度boxの大きさ
 
 start_button_size = 1000#スタートボタンの大きさ
-
-level_button_frame_size = 1800#レベルを囲んでいる枠の大きさ
-level_size = 600#難易度boxの大きさ
-
-start_button_size = 1000#スタートボタンの大きさ
-
-level_button_frame_size = 1800#レベルを囲んでいる枠の大きさ
 
 edge_range = 3 #外周と生成円の距離HTMLのpaddingのノリ
 
 
 #変更不可
-player_circle_file_list =["青足.png","赤足.png","青手.png","赤手.png"] #円のバリエーション
-player_circle_list = []
 player_circle_file_list =["青足.png","赤足.png","青手.png","赤手.png"] #円のバリエーション
 player_circle_list = []
 
@@ -83,7 +76,10 @@ level_list = []
 start_button_file_list = ["start_button.png" , "start_button_frame.png"]
 start_button_list = []
 
-menu_entity_list = start_button_list + level_list 
+design_file_list = [
+    ("level_frame.png",1800)
+]
+design_list = []
 
 menu_entity_list = start_button_list + level_list 
 
@@ -112,16 +108,16 @@ for filename in start_button_file_list:
     newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale)) 
     start_button_list.append(newimage)
 
-screen_img_list = start_button_list + level_list
-screen_name_list = start_button_file_list + level_file_list
+
+for n,s in design_file_list: 
+    image = pygame.image.load(n)
+    scale = s / image.get_width()
+    new_dsign_entity = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
+    design_list.append(new_dsign_entity)
+
 
 screen_img_list = start_button_list + level_list
 screen_name_list = start_button_file_list + level_file_list
-
-image = pygame.image.load("level_frame.png")
-scale = level_button_frame_size / image.get_width()
-scale = level_button_frame_size / image.get_width()
-game_level_frame = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
 
 mode = "set"
 
@@ -515,20 +511,6 @@ class level_entitys(menu_entity):
         self.level_seter = level_seter
         self.clear = defa_clear
         self.defa_clear = defa_clear
-        self.img = img 
-        self.draw_point = draw_point
-        self.range = pushrange
-        self.clear = clear
-
-class level_entitys(menu_entity):
-    def __init__(self,name,img,draw_point,pushrange,level_seter):
-        defa_clear = 50 #エンティティーの初期透明度の指定　min:0 max:255
-
-        super().__init__(name,img,draw_point,pushrange,defa_clear)
-        self.range = pushrange
-        self.level_seter = level_seter
-        self.clear = defa_clear
-        self.defa_clear = defa_clear
         self.count = 0
 
     def action(self):
@@ -542,31 +524,6 @@ class level_entitys(menu_entity):
         self.clear -= 1
         if self.clear < self.defa_clear:
             self.clear = self.defa_clear
-
-
-class mode_button_entity(menu_entity):
-    def __init__(self,name,img,draw_point,pushrange,mode_seter):
-        if name == "start_button.png":
-            defa_clear = 255 #エンティティーの初期透明度の指定　min:0 max:255
-
-        else:
-            defa_clear = 0 #エンティティーの初期透明度の指定　min:0 max:255
-
-        super().__init__(name,img,draw_point,pushrange,defa_clear)
-        self.mode_seter = mode_seter
-
-    def action(self):
-        self.clear += 1
-        if self.clear > 255:
-            self.clear = 255
-            global difficulty_level
-            difficulty_level = self.level_seter
-
-    def back_action(self):
-        self.clear -= 1
-        if self.clear < self.defa_clear:
-            self.clear = self.defa_clear
-
 
 class mode_button_entity(menu_entity):
     def __init__(self,name,img,draw_point,pushrange,mode_seter):
@@ -588,7 +545,16 @@ class mode_button_entity(menu_entity):
             if self.clear > 255:
                 self.clear = 255
                 global mode
+                global circle_time
                 mode = self.mode_seter
+                if difficulty_level == "easy":
+                    circle_time = 10
+
+                if difficulty_level == "normal":
+                    circle_time = 7
+
+                if difficulty_level == "hard":
+                    circle_time = 5
 
     def back_action(self):
         if self.name == "start_button_frame.png":
@@ -740,6 +706,8 @@ mode_button_entity_list = []
 for i in range(len(start_button_file_list)):
     new_mode_button_entity = mode_button_entity(start_button_file_list[i],start_button_list[i],modebuttonentity_drawpoint_list[i],modebuttonentity_range_list[i],modebuttonentity_seter_list[i])
     mode_button_entity_list.append(new_mode_button_entity)
+
+    # design_listこれをクラスに噛ませる
 
 aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
 aruco_params = cv2.aruco.DetectorParameters()
