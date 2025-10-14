@@ -67,8 +67,6 @@ edge_range = 3 #外周と生成円の距離HTMLのpaddingのノリ
 
 
 #変更不可
-player_circle_file_list =["青足.png","赤足.png","青手.png","赤手.png"] #円のバリエーション
-player_circle_list = []
 
 level_file_list = ["easy.png" , "normal.png" , "hard.png"] #難易度のバリエーション
 level_list = []
@@ -79,21 +77,13 @@ start_button_list = []
 design_file_list = [
     ("level_frame.png",1800)
 ]
-design_list = []
-
-menu_entity_list = start_button_list + level_list 
+design_list = [] 
 
 for filename in comment_file_list:
     image = pygame.image.load(filename)
     scale = comment_size / image.get_width()
     newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
     comment_list.append(newimage)
-
-for filename in player_circle_file_list:
-    image = pygame.image.load(filename)
-    scale = circle_size / image.get_width()
-    newimage = pygame.transform.scale(image, (image.get_width()*scale, image.get_height()*scale))
-    player_circle_list.append(newimage)
 
 for filename in level_file_list:
     image = pygame.image.load(filename)
@@ -179,6 +169,9 @@ comment_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
 check_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
 
 cursor_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
+
+move_entity_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
+back_entity_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
 
 left_top = (0,0)
 right_top = (0,0)
@@ -337,57 +330,6 @@ class tap_comment:
             if self.clear == 0:
                 if self in comment_q:
                     comment_q.remove(self)
-
-def coordinate():
-    if use_aruco:
-        ret, frame = cap.read()
-        if ret:
-            markers, ids, rejected = aruco_detector.detectMarkers(frame)
-            
-            for i in range(len(markers)):
-                ID = ids[i]
-                C1 = markers[i][0][0]
-                C2 = markers[i][0][1]
-                C3 = markers[i][0][2]
-                C4 = markers[i][0][3]
-
-                #ave[x,y]
-                ave = (C1[0] + C2[0] + C3[0] + C4[0]) / 4 , (C1[1] + C2 [1] + C3[1] + C4[1]) / 4
-
-                x,y =  player_chege_point(ave)
-                x,y =  player_chege_point(ave)
-                if ID == 1:
-                    global left_top
-                    left_top = ave
-                    print(left_top)
-                if ID == 2:
-                    global right_top
-                    right_top = ave
-                    print(right_top)
-                if ID == 3:
-                    global right_bottom
-                    right_bottom = ave
-                    print(right_bottom)
-                if ID == 4:
-                    global left_bottom
-                    left_bottom = ave
-                    print(left_bottom) 
-                if ID == 6:
-                    global red_feet
-                    red_feet = x,y,6
-                    print(f"目印{red_feet}")
-                if ID == 8:
-                    global red_hand
-                    red_hand = x,y,8
-                if ID == 5:
-                    global blue_feet
-                    blue_feet = x,y,5
-                if ID == 7:
-                    global blue_hand
-                    blue_hand = x,y,7
-
-    else:
-        return pygame.mouse.get_pos(),pygame.mouse.get_pos(),pygame.mouse.get_pos(),pygame.mouse.get_pos()
     
 def change_x(A, B, now):
     x1, y1 = A
@@ -458,29 +400,25 @@ class effect_circle:
 
 clock = pygame.time.Clock()
 
-id_counter = 1
-
 class set_check_entity:
-    def __init__(self,task,draw_point,now_point,img):
-        global id_counter
+    def __init__(self,check_id,task,draw_point,img):
         self.count = 0
 
         self.task = task
-        self.check_id = id_counter
+        self.check_id = check_id
         self.draw_point = draw_point
-        self.now_point = now_point
+        self.now_point = (0,0)
         self.img = img
 
-        id_counter += 1
 
 class edge_marker(set_check_entity):
-    def __init__(self,name,draw_point,now_point):
-        super().__init__(5,draw_point,now_point,None)#ここの数字で0.2秒間に読み取る目標を設定する。
+    def __init__(self,check_id,name,draw_point):
+        super().__init__(check_id,5,draw_point,None)#ここの数字で0.2秒間に読み取る目標を設定する。
         self.name = name
 
 class check_player(set_check_entity):
-    def __init__(self,name,draw_point,now_point,img):
-        super().__init__(5,draw_point,now_point,img)#ここの数字で0.2秒間に読み取る目標を設定する。
+    def __init__(self,check_id,name,draw_point,img):
+        super().__init__(check_id,5,draw_point,img)#ここの数字で0.2秒間に読み取る目標を設定する。
         self.img = img
         self.name = name
 
@@ -494,20 +432,16 @@ def markers_checker():
             return False
     return True
 
-class menu_entity:
-    def __init__(self,name,img,draw_point,pushrange,clear):
+class level_entitys:
+    def __init__(self,name,img,draw_point,pushrange,level_seter):
+        defa_clear = 50 #エンティティーの初期透明度の指定　min:0 max:255
+        move = True
+
         self.name = name
         self.img = img 
         self.draw_point = draw_point
-        self.range = pushrange
-        self.clear = clear
-
-class level_entitys(menu_entity):
-    def __init__(self,name,img,draw_point,pushrange,level_seter):
-        defa_clear = 50 #エンティティーの初期透明度の指定　min:0 max:255
-
-        super().__init__(name,img,draw_point,pushrange,defa_clear)
-        self.range = pushrange
+        self.pushrange = pushrange
+        self.move = move
         self.level_seter = level_seter
         self.clear = defa_clear
         self.defa_clear = defa_clear
@@ -525,19 +459,29 @@ class level_entitys(menu_entity):
         if self.clear < self.defa_clear:
             self.clear = self.defa_clear
 
-class mode_button_entity(menu_entity):
+class menu_back_entity:
+    def __init__
+
+
+class mode_button_entity:
     def __init__(self,name,img,draw_point,pushrange,mode_seter):
         if name == "start_button.png":
             defa_clear = 255 #エンティティーの初期透明度の指定　min:0 max:255
+            move = False
 
         else:
             defa_clear = 0 #エンティティーの初期透明度の指定　min:0 max:255
+            move = True
 
-        super().__init__(name,img,draw_point,pushrange,defa_clear)
         self.mode_seter = mode_seter
         self.count = 0
         self.clear = defa_clear
         self.defa_clear = defa_clear
+        self.name = name
+        self.img = img 
+        self.draw_point = draw_point
+        self.pushrange = pushrange
+        self.move = move
 
     def action(self):
         if self.name == "start_button_frame.png":
@@ -564,16 +508,16 @@ class mode_button_entity(menu_entity):
 
             
 
-def push_checker(cursor):
-    for i in menu_entity_list: #aから始まるものはアンダー（底辺）に当たる座標。tから始まるものはトップ（上底）に当たる座標。
-        a_x , t_x , a_y , t_y = i.pushrange
+def push_checker(cursor,entity):
+     #aから始まるものはアンダー（底辺）に当たる座標。tから始まるものはトップ（上底）に当たる座標。
+        a_x , t_x , a_y , t_y = entity.pushrange
         c_x , c_y = cursor
 
         if a_x <= c_x <= t_x and a_y <= c_y <= t_y:
-            i.action()
+            entity.action()
 
         else:
-            i.back_action()
+            entity.back_action()
 
 def p(text,time):
     if time == "n":
@@ -627,13 +571,6 @@ blue_hand = (screen_width * 4 // 9) - 90,(screen_height * 2 // 9) - 50
 red_feet = (screen_width * 5 // 9) - 90,(screen_height * 1 // 9) - 50
 red_hand = (screen_width * 5 // 9) - 90,(screen_height * 2 // 9) - 50
 
-player_set_list = [    
-    [(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50],
-    [(screen_width * 4 // 9) - 90,(screen_height * 2 // 9) - 50],
-    [(screen_width * 5 // 9) - 90,(screen_height * 1 // 9) - 50],
-    [(screen_width * 5 // 9) - 90,(screen_height * 2 // 9) - 50],
-]
-
 edge_marker_set_list = [
     [int(screen_width * 0.1),int(screen_height * 0.1)],
     [int(screen_width * 0.9),int(screen_height * 0.1)],
@@ -646,22 +583,22 @@ edge_marker_name_list = [
     "right_top",
     "right_buttom",
     "left_buttom"
-
 ]
 
 
 edge_marker_list = []
 for i in range(len(player_set_list)): # 0:blue_feet 1:blue_hand 2:red_feet 3:red_hand
-    new_players = edge_marker(edge_marker_name_list,edge_marker_set_list[i],(0,0))#座標の初期値x=0,y=0
+    new_players = edge_marker(edge_marker_name_list,edge_marker_set_list[i])#座標の初期値x=0,y=0
     edge_marker_list.append(new_players)
 
-player_marker_list = []
-for i in range(len(player_set_list)): # 0:blue_feet 1:blue_hand 2:red_feet 3:red_hand
-    new_players = check_player(player_circle_file_list[i] ,player_set_list[i],(0,0),player_circle_list[i])#座標の初期値x=0,y=0
-    player_marker_list.append(new_players)
+player_marker_list = [
+    check_player(5,"青足.png",[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50],pygame.transform.scale("青足.png", (circle_size, circle_size))),
+    check_player(6,"赤足.png",[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50],pygame.transform.scale("赤足.png", (circle_size, circle_size))),
+    check_player(7,"青手.png",[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50],pygame.transform.scale("青手.png", (circle_size, circle_size))),
+    check_player(8,"赤手.png",[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50],pygame.transform.scale("赤手.png", (circle_size, circle_size))),
+]
 
 set_entity_list = edge_marker_list + player_marker_list
-
 
 levelentity_drawpoint_list = [
     ((screen_width * 3 / 12) -300,(screen_height / 3) - 167),
@@ -697,6 +634,10 @@ modebuttonentity_seter_list = [
     "play"
 ]
 
+design_entitydrawpoint_list = [
+    ((screen_width / 2) - 900,(screen_height / 2) - 500)
+]
+
 level_entity_list = []
 for i in range(len(level_file_list)):
     new_level_entity = level_entitys(level_file_list[i],level_list[i],levelentity_drawpoint_list[i],levelentity_range_list[i],levelentity_seter_list[i])
@@ -706,6 +647,14 @@ mode_button_entity_list = []
 for i in range(len(start_button_file_list)):
     new_mode_button_entity = mode_button_entity(start_button_file_list[i],start_button_list[i],modebuttonentity_drawpoint_list[i],modebuttonentity_range_list[i],modebuttonentity_seter_list[i])
     mode_button_entity_list.append(new_mode_button_entity)
+
+mode_design_entity_list = []
+for i in range(len(design_list)):
+    new_mode_button_entity_list = menu_entity(design_file_list[i],design_list[i],design_entitydrawpoint_list[i],None,False)
+    mode_design_entity_list.append(new_mode_button_entity)
+
+menu_entity_list = level_entity_list + mode_button_entity_list + mode_design_entity_list
+
 
     # design_listこれをクラスに噛ませる
 
@@ -784,8 +733,6 @@ while running:
                 if count % 100 == 0:
                     if markers_checker():
                         mode = "menu"
-                    if markers_checker():
-                        mode = "menu"
 
             screen.blit(check_surface,(0,0))
 
@@ -801,139 +748,85 @@ while running:
                     coo = i.now_point
             print(f"coo{coo}")
 
-        push_checker(coo)
-
         coo_x,coo_y = coo
  
         spotlight(coo)
 
-        level_list[0].set_alpha(easy_count)
-        level_list[1].set_alpha(normal_count)
-        level_list[2].set_alpha(hard_count)
-        start_button_list[1].set_alpha(start_count)
-
-        menu_surface.blit(game_level_frame, ((screen_width / 2) - 900,(screen_height / 2) - 500))
-        menu_surface.blit(level_list[0], ((screen_width * 3 / 12) -300,(screen_height / 3) - 167))
-        menu_surface.blit(level_list[1], ((screen_width * 6 / 12) -300,(screen_height / 3) - 167))
-        menu_surface.blit(level_list[2], ((screen_width * 9 / 12) -300,(screen_height / 3) - 167))
-        menu_surface.blit(start_button_list[0], ((screen_width / 2) -500,(screen_height * 4 / 5) -278))
-        menu_surface.blit(start_button_list[1], ((screen_width / 2) -500,(screen_height * 4 / 5) -278))
-
-        if 277 <= coo_x <= 679 and 242 <= coo_y <= 485:
-            easy_count += 4
-            if easy_count >= 255:
-                if 277 <= coo_x <= 679 and 242 <= coo_y <= 485:
-                    easy_count = 255
-                    difficulty_level = "easy"
-        else:
-            if difficulty_level != "easy":
-                easy_count = 55
-
-
-        if 757 <= coo_x <= 1159 and 242 <= coo_y <= 485:
-            normal_count += 4
-            if normal_count >= 255:
-                if 757 <= coo_x <= 1159 and 242 <= coo_y <= 485:
-                    normal_count = 255
-                    difficulty_level = "normal"
-        else:
-            if difficulty_level != "normal":
-                normal_count = 55
-
-
-
-        if 1237 <= coo_x <= 1639 and 242 <= coo_y <= 485:
-            hard_count += 4
-            if hard_count >= 255:
-                if 1237 <= coo_x <= 1639 and 242 <= coo_y <= 485:
-                    hard_count = 255
-                    difficulty_level = "hard"
-        else:
-            if difficulty_level != "hard":
-                hard_count = 55
-
-        if 524 <= coo_x <= 1398 and 734 <= coo_y <= 1006:
-            start_count += 2
-            if start_count >= 200:
-                if 524 <= coo_x <= 1398 and 734 <= coo_y <= 1006:
-                    start_count = 255
-                    mode = "play"
-                    if mode == "play":
-                        if difficulty_level == "easy":
-                            circle_time = 10
-
-                        if difficulty_level == "normal":
-                            circle_time = 7
-
-                        if difficulty_level == "hard":
-                            circle_time = 5
-
-        else:
-            start_count -=8
-            if start_count <= 0:
-                start_count = 0
-
-
-
-        screen.blit(menu_surface,(0,0))
-        screen.blit(cursor_surface,(0,0))
-        if count % 5 == 0:
-            coordinate()
-
-
+        for i in menu_entity_list:
+            if i.move:
+                draw_x , draw_y = i.draw_point
+                move_entity_surface.blit(i.img, (draw_x , draw_y))
+                push_checker(coo,i)
             
+            else:
+                back_entity_surface.blit(i.img, (draw_x , draw_y))
+
+        # level_list[0].set_alpha(easy_count)
+        # level_list[1].set_alpha(normal_count)
+        # level_list[2].set_alpha(hard_count)
+        # start_button_list[1].set_alpha(start_count)
+
+        # menu_surface.blit(game_level_frame, ((screen_width / 2) - 900,(screen_height / 2) - 500))
+        # menu_surface.blit(level_list[0], ((screen_width * 3 / 12) -300,(screen_height / 3) - 167))
+        # menu_surface.blit(level_list[1], ((screen_width * 6 / 12) -300,(screen_height / 3) - 167))
+        # menu_surface.blit(level_list[2], ((screen_width * 9 / 12) -300,(screen_height / 3) - 167))
+        # menu_surface.blit(start_button_list[0], ((screen_width / 2) -500,(screen_height * 4 / 5) -278))
+        # menu_surface.blit(start_button_list[1], ((screen_width / 2) -500,(screen_height * 4 / 5) -278))
+
+        # screen.blit(menu_surface,(0,0))
+        # screen.blit(cursor_surface,(0,0))
+        # if count % 5 == 0:
+
+    # if mode =="play":
+    #     #総フレーム数（カウント
+    #     count += 1
+
+    #     if count % 150 == 0:
+    #         for i in [red_feet,blue_feet]:
+    #             new_effect_circle = effect_circle(i[0],i[1])
+    #             effect_circle_list.append(new_effect_circle)
+
+    #     effect_surface.fill((0,0,0,255 // 20))
+    #     alive_effect_circle_list = []
+    #     for i in effect_circle_list:
+    #         if i.alive:
+    #             alive_effect_circle_list.append(i)
+
+    #     effect_circle_list = alive_effect_circle_list
+    #     for i in effect_circle_list:
+    #         i.draw()
             
-    if mode =="play":
-        #総フレーム数（カウント
-        count += 1
+    #     #円の座標を設定する
+    #     if  count % (circle_time * 125) == 0:
+    #         while abs(new_circle_x - last_circle_x) <= split_screen_x * 5 and abs(new_circle_y - last_circle_y) <= split_screen_y * 5:
+    #             new_circle_x = random.randint(edge_range,split_varue - edge_range) * split_screen_x
+    #             new_circle_y = random.randint(edge_range,split_varue - edge_range) * split_screen_y
+    #         new_circle = make_circle(new_circle_x,new_circle_y,circle_time,random.randint(0,len(circle_list) - 1))
+    #         circles.append(new_circle)
+    #         last_circle_x = new_circle_x
+    #         last_circle_y = new_circle_y
 
-        if count % 150 == 0:
-            coordinate()
-            for i in [red_feet,blue_feet]:
-                new_effect_circle = effect_circle(i[0],i[1])
-                effect_circle_list.append(new_effect_circle)
-
-        effect_surface.fill((0,0,0,255 // 20))
-        alive_effect_circle_list = []
-        for i in effect_circle_list:
-            if i.alive:
-                alive_effect_circle_list.append(i)
-
-        effect_circle_list = alive_effect_circle_list
-        for i in effect_circle_list:
-            i.draw()
-            
-        #円の座標を設定する
-        if  count % (circle_time * 125) == 0:
-            while abs(new_circle_x - last_circle_x) <= split_screen_x * 5 and abs(new_circle_y - last_circle_y) <= split_screen_y * 5:
-                new_circle_x = random.randint(edge_range,split_varue - edge_range) * split_screen_x
-                new_circle_y = random.randint(edge_range,split_varue - edge_range) * split_screen_y
-            new_circle = make_circle(new_circle_x,new_circle_y,circle_time,random.randint(0,len(circle_list) - 1))
-            circles.append(new_circle)
-            last_circle_x = new_circle_x
-            last_circle_y = new_circle_y
-
-        #surfaceの描画
-        alive_circles = []
-        for i in circles:
-            if i.alive:
-                alive_circles.append(i)
+    #     #surfaceの描画
+    #     alive_circles = []
+    #     for i in circles:
+    #         if i.alive:
+    #             alive_circles.append(i)
                 
-        for i in alive_circles:
-            i.update()
-            i.draw()
+    #     for i in alive_circles:
+    #         i.update()
+    #         i.draw()
 
-        for i in comment_q:
-            i.update()
-            i.draw()
+    # #     for i in comment_q:
+    # #         i.update()
+    # #         i.draw()
         
-        screen.blit(comment_surface,(0,0))
+    #     screen.blit(comment_surface,(0,0))
 
-        screen.blit(effect_surface,(0,0))
+    #     screen.blit(effect_surface,(0,0))
 
-        screen.blit(circle_surface,(0,0))
+    #     screen.blit(circle_surface,(0,0))
 
-        screen.blit(cursor_surface,(0,0))
+    #     screen.blit(cursor_surface,(0,0))
 
     pygame.display.update() 
 
