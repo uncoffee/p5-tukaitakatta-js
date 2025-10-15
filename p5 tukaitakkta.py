@@ -346,6 +346,7 @@ class aruco_entity:
 
     def count_plus1(self):
         self.count += 1
+        self.clear -= 1
     
     def set_now_point(self, now_point):
         self.now_point = now_point
@@ -376,6 +377,7 @@ class edge_marker(aruco_entity):
 
 class player_marker(aruco_entity):
     def __init__(self,marker_id,img_name,size,draw_point):
+        self.img_size = 180
         self.img = image_changer(img_name,size)
 
         super().__init__(marker_id,draw_point)
@@ -385,16 +387,18 @@ class player_marker(aruco_entity):
             if self.count < 5:
                 back_surface.blit(self.img,self.set_point)
         if mode == "menu":
-            if i.marker_id == 6:#marker_idの6は"赤足.png"
-                if self.count < 5:
-                    pygame.draw.circle(back_surface, (255,255,255),player_chege_point(self.now_point), 30)
+            for i in set_entity_list:
+                if i.marker_id == 6:#marker_idの6は"赤足.png"
+                    if self.count < 5:
+                        pygame.draw.circle(back_surface, (255,255,255),player_chege_point(self.now_point), 30)
 
         if mode == "play":
-            back_surface.blit(self.img,self.draw_point)
-            pygame.draw.circle(back_surface,(255,255,255),(self.x,self.y),self.clear + 30, 5)
+            if self.clear > 0:
+                back_surface.blit(self.img,(self.draw_point[0]-self.img_size//2,self.draw_point[1]-self.img_size//2))
+                pygame.draw.circle(back_surface,(255,255,255),self.draw_point,self.clear + 30, 5)
 
-            if self.count < 5:
-                pygame.draw.circle(back_surface, (255,255,255),player_chege_point(self.now_point), 30)
+                if self.count < 5:
+                    pygame.draw.circle(back_surface, (255,255,255), player_chege_point(self.now_point), 30)
                 
 
 def count_checker():
@@ -548,6 +552,8 @@ def p(text,time):
 
 
 def scan_manager(scan_count,mode):
+    for j in set_entity_list:
+        j.count_plus1()
     if use_aruco:
 
         ret, frame = cap.read()
@@ -559,8 +565,6 @@ def scan_manager(scan_count,mode):
                 screen.blit(opencv_cap_surface,(screen_width / 2 - 340,screen_height * 2 / 3 - 204))
 
             if scan_count % 5 == 0:#この5は、5フレームのことを指す。
-                for j in set_entity_list:
-                    j.count_plus1()
                     
                 markers, ids, rejected = aruco_detector.detectMarkers(frame)
                 if ids is not None:
@@ -694,6 +698,8 @@ while running:
         if scan_count % 600 == 0:
             make_circle()
 
+    for e in set_entity_list:
+        e.draw(mode)
 
     screen.blit(back_surface,(0,0))
 
