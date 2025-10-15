@@ -381,18 +381,28 @@ clock = pygame.time.Clock()
 
 
 
-class set_entity:
-    def __init__(self,marker_id,draw_point,img,task):
+class aruco_entity:
+    def __init__(self,marker_id,set_point,img,task):
         self.count = 0
         self.task = task
         self.marker_id = marker_id
-        self.draw_point = draw_point
+        self.set_point = set_point
+        self.draw_point = set_point
         self.now_point = (0,0) #プレイヤーの位置を特定するのに必要な値（初期値）
         self.img = img
 
 
+    def set_mode(self):
+        self.count += 1
+        if self.marker_id <= 4:
+            pygame.draw.circle(back_surface, (255,0,0),(self.draw_point), 30)
 
-class edge_marker(set_entity):
+        else:
+            back_surface.blit(self.img,self.draw_point)
+
+
+
+class edge_marker(aruco_entity):
     def __init__(self,marker_id,name,draw_point):
         goal = 5 #0.2秒間に読み取る目標を設定する。
 
@@ -401,14 +411,13 @@ class edge_marker(set_entity):
         self.name = name
 
 
-
-class check_player(set_entity):
+class player_marker(aruco_entity):
     def __init__(self,marker_id,img_name,size,draw_point):
         img = image_changer(img_name,size)
         goal = 5 #0.2秒間に読み取る目標を設定する。
 
         super().__init__(marker_id,draw_point,img,goal)
-
+        super(play_entity).__init(marker_id,img,size)
 
 
 def count_checker():
@@ -494,6 +503,7 @@ class start_button_entity(menu_entity):
         self.push_range = push_range
 
         self.count = 0
+
         
     def action(self):
         self.now_clear += 3
@@ -520,6 +530,18 @@ class start_button_entity(menu_entity):
 
 
 
+
+class play_entity:
+    def __init__(self,marker_id,img,size):
+        self.marker_id = marker_id
+        self.img = img
+        self.size = size
+        self.spawn_point = (0,0)#初期位置の設定（画面サイズをオーバーしていなければ問題なし）
+
+class
+
+
+
 def push_checker(cursor,entity):
      #aから始まるものはアンダー（底辺）に当たる座標。tから始まるものはトップ（上底）に当たる座標。
         a_x , t_x , a_y , t_y = entity.push_range
@@ -539,33 +561,43 @@ def p(text,time):
     if time % 50 == 0:
         print(text)
 
-def position_manager(ret, frame, mode):
-    markers, ids, rejected = aruco_detector.detectMarkers(frame)
-    if ids is not None:
+def position_manager(mode):
 
-        for i in range(len(markers)):
-            ID = ids[i]
-            C1 = markers[i][0][0]
-            C2 = markers[i][0][1]
-            C3 = markers[i][0][2]
-            C4 = markers[i][0][3]
-            ave = int((C1[0] + C2[0] + C3[0] + C4[0]) / 4) , int((C1[1] + C2 [1] + C3[1] + C4[1]) / 4)
+    ret, frame = cap.read()
+    if ret:
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame = numpy.rot90(frame)
+        if mode == "set":
 
-            for j in set_entity_list:
-                if j.marker_id == int(ID):
-                    if mode == "set":
-                        j.count += 1
-                        if j.marker_id <= 4:
-                            pygame.draw.circle(back_surface, (255,0,0),(j.draw_point), 30)
+            pygame.draw.circle(back_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
+            pygame.draw.circle(back_surface, (255,255,255),(int(screen_width * 0.9),int(screen_height * 0.1)), 30)
+            pygame.draw.circle(back_surface, (255,255,255),(int(screen_width * 0.9),int(screen_height * 0.9)), 30)
+            pygame.draw.circle(back_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
+            
+            opencv_cap_surface = pygame.surfarray.make_surface(frame)
+            screen.blit(opencv_cap_surface,(screen_width / 2 - 340,screen_height * 2 / 3 - 204))
 
-                        else:
-                            back_surface.blit(j.img,j.draw_point)
+        markers, ids, rejected = aruco_detector.detectMarkers(frame)
+        if ids is not None:
+            for i in range(len(markers)):
+                ID = ids[i]
+                C1 = markers[i][0][0]
+                C2 = markers[i][0][1]
+                C3 = markers[i][0][2]
+                C4 = markers[i][0][3]
+                ave = int((C1[0] + C2[0] + C3[0] + C4[0]) / 4) , int((C1[1] + C2 [1] + C3[1] + C4[1]) / 4)
 
-                    if int(ID) <= 4:#1~4までのIDは隅の四点に設置しているマーカー
-                        j.now_point = ave
+                for j in set_entity_list:
+                    if j.marker_id == int(ID):
+                        if mode == "set":
+                            j.set_mode()
 
-                    else:#5~8までのIDはプレイヤーの四肢に装着しているマーカー
-                        j.now_point = player_chege_point(ave)
+
+                        if int(ID) <= 4:#1~4までのIDは隅の四点に設置しているマーカー
+                            j.now_point = ave
+
+                        else:#5~8までのIDはプレイヤーの四肢に装着しているマーカー
+                            j.now_point = player_chege_point(ave)
 
 
 
@@ -592,10 +624,10 @@ edge_marker_list = [
 ]
 
 player_marker_list = [
-    check_player(5,"青足.png",circle_size,[(screen_width * 5 // 9) - 90,(screen_height * 1 // 9) - 50]),
-    check_player(6,"赤足.png",circle_size,[(screen_width * 5 // 9) - 90,(screen_height * 2 // 9) - 50]),
-    check_player(7,"青手.png",circle_size,[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50]),
-    check_player(8,"赤手.png",circle_size,[(screen_width * 4 // 9) - 90,(screen_height * 2 // 9) - 50])
+    player_marker(5,"青足.png",circle_size,[(screen_width * 5 // 9) - 90,(screen_height * 1 // 9) - 50]),
+    player_marker(6,"赤足.png",circle_size,[(screen_width * 5 // 9) - 90,(screen_height * 2 // 9) - 50]),
+    player_marker(7,"青手.png",circle_size,[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50]),
+    player_marker(8,"赤手.png",circle_size,[(screen_width * 4 // 9) - 90,(screen_height * 2 // 9) - 50])
 ]
 
 set_entity_list = edge_marker_list + player_marker_list #セットモードで使うリスト
@@ -617,8 +649,6 @@ back_entity_list = [
 ]
 
 menu_entity_list = level_entity_list + start_button_list + back_entity_list #メニューモードで使うリスト
-
-count_entity = count_down()
 
 
 
@@ -665,24 +695,15 @@ while running:
         if use_aruco:
             count += 1
 
-            pygame.draw.circle(back_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
-            pygame.draw.circle(back_surface, (255,255,255),(int(screen_width * 0.9),int(screen_height * 0.1)), 30)
-            pygame.draw.circle(back_surface, (255,255,255),(int(screen_width * 0.9),int(screen_height * 0.9)), 30)
-            pygame.draw.circle(back_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
 
-            ret, frame = cap.read()
-            if ret:
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                frame = numpy.rot90(frame) 
-                opencv_cap_surface = pygame.surfarray.make_surface(frame)
-                screen.blit(opencv_cap_surface,(screen_width / 2 - 340,screen_height * 2 / 3 - 204))#カメラ視点の映像を映す
 
-                if count % 5 == 0:
-                    position_manager(ret, frame,"set")
 
-                if count % 100 == 0:
-                    if count_checker():
-                        mode = "menu"
+            if count % 3 == 0:
+                position_manager("set")#この関数からクラスの関数をたたいているため、描画もこれに含まれる。
+
+            if count % 100 == 0:
+                if count_checker():
+                    mode = "menu"
 
         else:
             mode = "menu"
@@ -706,7 +727,7 @@ while running:
         count += 1
         if not count <= count_down_time:
             if count % 600 == 0:
-                make_circle()
+                make_circle(random.randint(0,3))
 
 
 
