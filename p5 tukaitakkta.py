@@ -88,7 +88,7 @@ difficulty_level = "easy"
 
 game_point = 0
 
-count = 0
+scan_count = 0
 
 color_count = 0
 
@@ -152,12 +152,6 @@ if mode == "play":
 
     if difficulty_level == "hard":
         circle_time = 5
-
-
-
-def spotlight(point):
-    x , y = point
-    pygame.draw.circle(front_surface,(255,255,255,200),(x,y),25)
 
 def random_color():
     return (random.randint(0,255),random.randint(0,255),random.randint(0,255))
@@ -255,31 +249,14 @@ class play_screen:
                     self.alive = False
                     new_comment = tap_comment(self.x,self.y,comment_list[random.randint(0,len(comment_list)-1)])
                     comment_q.append(new_comment)
-                
-    def draw(self):
-        r,g,b = self.color
         
-        #外周円
-        pygame.draw.circle(circle_surface,(r,g,b,self.clear),(self.x,self.y),self.size)
-        pygame.draw.circle(circle_surface,(r,g,b,0),(self.x,self.y),self.size - 4)
-
-        #内周円
-        circle_list[self.circle_id].set_alpha(self.clear)
-        screen.blit(circle_list[self.circle_id], (self.x - 90, self.y - 50))
-
 def random_position(length):
-    return random.randint(0 + length / split_varue, 0 - length / split_varue)
+    return random.randint(split_varue, length - split_varue)
 
 def make_circle():
-    if len(play_circle_list) <= 0:
-        x = (random_position(screen_width))
-        y = (random_position(screen_height))
-
-    else:
-        while abs(new_circle_x - last_circle_x) <= split_screen_x * 5 and abs(new_circle_y - last_circle_y) <= split_screen_y * 5:
-            new_circle_x = random.randint(edge_range,split_varue - edge_range) * split_screen_x
-            new_circle_y = random.randint(edge_range,split_varue - edge_range) * split_screen_y
-        new_circle = make_circle(new_circle_x,new_circle_y,circle_time,random.randint(0,len(circle_list) - 1))
+    m = random.choice(player_marker_list)
+    m.draw_point = (random_position(screen_width),random_position(screen_height))
+    m.clear = 255
 
 class tap_comment:
 
@@ -333,8 +310,7 @@ def player_chege_point(player):
 
             #print(f"横 :{left_x,player[0],right_x, mouse_x}")
         except:
-            if count % 50 == 0:
-                print("eroDivisionError")
+            print("Error")
             
         try:
             top_y = change_y(left_top,right_top,player)
@@ -344,10 +320,11 @@ def player_chege_point(player):
 
             #print(f"縦 :{top_y,player[1],bottom_y, mouse_y}")
         except:
-            if count % 50 == 0:
-                print("eroDivisionError")
+            print("Error")
 
         return mouse_x , mouse_y
+    else:
+        return player
 
 def image_changer(img_name,size):
     img = pygame.image.load(img_name)
@@ -356,77 +333,73 @@ def image_changer(img_name,size):
     return img_data
 
 
-effect_circle_list = []
-
-class effect_circle:
-    def __init__(self,x,y):
-        self.x = x
-        self.y = y
-        self.size = 5
-        self.clear = 200
-        self.alive = True
-        self.r,self.g,self.b = random_color()
-    
-    def draw(self):
-        pygame.draw.circle(back_surface,(self.r,self.g,self.b,self.clear),(self.x,self.y),self.size)
-        pygame.draw.circle(back_surface,(0,0,0,0),(self.x,self.y),self.size - 4)
-
-        self.size += screen_width / 200
-        self.clear -= 1
-        if self.clear <= 0:
-            self.clear = 0
-            self.alive = False
-
 clock = pygame.time.Clock()
 
-
-
 class aruco_entity:
-    def __init__(self,marker_id,set_point,img,task):
-        self.count = 0
-        self.task = task
+    def __init__(self,marker_id,set_point):
+        self.count = 1000
         self.marker_id = marker_id
         self.set_point = set_point
         self.draw_point = set_point
         self.now_point = (0,0) #プレイヤーの位置を特定するのに必要な値（初期値）
-        self.img = img
+        self.clear = 0
 
+    def count_plus1(self):
+        self.count += 1
+    
+    def set_now_point(self, now_point):
+        self.now_point = now_point
+        self.count = 0
 
     def set_mode(self):
         self.count += 1
         if self.marker_id <= 4:
-            pygame.draw.circle(back_surface, (255,0,0),(self.draw_point), 30)
+            pygame.draw.circle(back_surface, (255,0,0),(self.set_point), 30)
 
         else:
-            back_surface.blit(self.img,self.draw_point)
-
-
+            back_surface.blit(self.img,self.set_point)
+    
 
 class edge_marker(aruco_entity):
     def __init__(self,marker_id,name,draw_point):
-        goal = 5 #0.2秒間に読み取る目標を設定する。
-
-        super().__init__(marker_id,draw_point,None,goal)
+        super().__init__(marker_id,draw_point)
 
         self.name = name
+
+    def draw(self, mode):
+        if mode == "set":
+            if self.now_point == (0,0):
+                pygame.draw.circle(back_surface, (255,255,255),(self.set_point), 30)
+            else:
+                pygame.draw.circle(back_surface, (255,0,0),(self.set_point), 30)
 
 
 class player_marker(aruco_entity):
     def __init__(self,marker_id,img_name,size,draw_point):
-        img = image_changer(img_name,size)
-        goal = 5 #0.2秒間に読み取る目標を設定する。
+        self.img = image_changer(img_name,size)
 
-        super().__init__(marker_id,draw_point,img,goal)
-        super(play_entity).__init(marker_id,img,size)
+        super().__init__(marker_id,draw_point)
 
+    def draw(self, mode):
+        if mode == "set":
+            if self.count < 5:
+                back_surface.blit(self.img,self.set_point)
+        if mode == "menu":
+            if i.marker_id == 6:#marker_idの6は"赤足.png"
+                if self.count < 5:
+                    pygame.draw.circle(back_surface, (255,255,255),player_chege_point(self.now_point), 30)
+
+        if mode == "play":
+            back_surface.blit(self.img,self.draw_point)
+            pygame.draw.circle(back_surface,(255,255,255),(self.x,self.y),self.clear + 30, 5)
+
+            if self.count < 5:
+                pygame.draw.circle(back_surface, (255,255,255),player_chege_point(self.now_point), 30)
+                
 
 def count_checker():
     for i in set_entity_list:
-        if i.count >= i.task:
-            continue
-        else:
-            for j in set_entity_list:
-                j.count = 0
+        if i.count > 5:
             return False
     return True
 
@@ -504,7 +477,7 @@ class start_button_entity(menu_entity):
 
         self.count = 0
 
-        
+    
     def action(self):
         self.now_clear += 3
         if self.now_clear > 255:
@@ -532,13 +505,24 @@ class start_button_entity(menu_entity):
 
 
 class play_entity:
-    def __init__(self,marker_id,img,size):
+    def __init__(self,marker_id,img,spawn_point,add_clear):
         self.marker_id = marker_id
         self.img = img
-        self.size = size
-        self.spawn_point = (0,0)#初期位置の設定（画面サイズをオーバーしていなければ問題なし）
+        self.spawn_point = spawn_point#二つの値を返さないとエラー吐く
+        self.add_clear = add_clear
+        self.alive = True#円が完全に出現したら、Falseになる。
+        self.clear = 0
+    
+    def move_marker(self):
+        self.img.set_alpha(self.clear)
+        back_surface.blit(self.img,self.spawn_point)
 
-class
+        if self.alive:
+            self.clear += self.add_clear
+            if self.clear > 255:#完全に不透明な値255
+                self.alive = False
+            
+
 
 
 
@@ -561,44 +545,40 @@ def p(text,time):
     if time % 50 == 0:
         print(text)
 
-def position_manager(mode):
 
-    ret, frame = cap.read()
-    if ret:
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frame = numpy.rot90(frame)
-        if mode == "set":
 
-            pygame.draw.circle(back_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height *0.1)), 30)
-            pygame.draw.circle(back_surface, (255,255,255),(int(screen_width * 0.9),int(screen_height * 0.1)), 30)
-            pygame.draw.circle(back_surface, (255,255,255),(int(screen_width * 0.9),int(screen_height * 0.9)), 30)
-            pygame.draw.circle(back_surface, (255,255,255),(int(screen_width * 0.1),int(screen_height * 0.9)), 30)
-            
-            opencv_cap_surface = pygame.surfarray.make_surface(frame)
-            screen.blit(opencv_cap_surface,(screen_width / 2 - 340,screen_height * 2 / 3 - 204))
+def scan_manager(scan_count,mode):
+    if use_aruco:
 
-        markers, ids, rejected = aruco_detector.detectMarkers(frame)
-        if ids is not None:
-            for i in range(len(markers)):
-                ID = ids[i]
-                C1 = markers[i][0][0]
-                C2 = markers[i][0][1]
-                C3 = markers[i][0][2]
-                C4 = markers[i][0][3]
-                ave = int((C1[0] + C2[0] + C3[0] + C4[0]) / 4) , int((C1[1] + C2 [1] + C3[1] + C4[1]) / 4)
+        ret, frame = cap.read()
+        if ret:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = numpy.rot90(frame)
+            if mode == "set":
+                opencv_cap_surface = pygame.surfarray.make_surface(frame)
+                screen.blit(opencv_cap_surface,(screen_width / 2 - 340,screen_height * 2 / 3 - 204))
 
+            if scan_count % 5 == 0:#この5は、5フレームのことを指す。
                 for j in set_entity_list:
-                    if j.marker_id == int(ID):
-                        if mode == "set":
-                            j.set_mode()
+                    j.count_plus1()
+                    
+                markers, ids, rejected = aruco_detector.detectMarkers(frame)
+                if ids is not None:
+                    for i in range(len(markers)):
+                        ID = ids[i]
+                        C1 = markers[i][0][0]
+                        C2 = markers[i][0][1]
+                        C3 = markers[i][0][2]
+                        C4 = markers[i][0][3]
+                        ave = int((C1[0] + C2[0] + C3[0] + C4[0]) / 4) , int((C1[1] + C2 [1] + C3[1] + C4[1]) / 4)
 
-
-                        if int(ID) <= 4:#1~4までのIDは隅の四点に設置しているマーカー
-                            j.now_point = ave
-
-                        else:#5~8までのIDはプレイヤーの四肢に装着しているマーカー
-                            j.now_point = player_chege_point(ave)
-
+                        for j in set_entity_list:
+                            if j.marker_id == int(ID):
+                                j.set_now_point(ave)
+    else:
+        for j in set_entity_list:
+            if j.marker_id == 6:
+                j.set_now_point(pygame.mouse.get_pos())
 
 
 
@@ -630,7 +610,7 @@ player_marker_list = [
     player_marker(8,"赤手.png",circle_size,[(screen_width * 4 // 9) - 90,(screen_height * 2 // 9) - 50])
 ]
 
-set_entity_list = edge_marker_list + player_marker_list #セットモードで使うリスト
+set_entity_list = edge_marker_list + player_marker_list #セットモードで使うリスト+座標設定にも使ってる。
 
 level_entity_list = [
     level_entitys("easy.png",level_size,((screen_width * 3 / 12) -300,(screen_height / 3) - 167),(277,679,242,485),"easy"),
@@ -691,107 +671,29 @@ while running:
     middle_surface.fill((0,0,0,0))
     back_surface.fill((0,0,0,0))
 
+    scan_count += 1
+    scan_manager(scan_count, mode)#この関数からクラスの関数をたたいているため、描画もこれに含まれる。
+
     if mode == "set":
         if use_aruco:
-            count += 1
-
-
-
-
-            if count % 3 == 0:
-                position_manager("set")#この関数からクラスの関数をたたいているため、描画もこれに含まれる。
-
-            if count % 100 == 0:
-                if count_checker():
-                    mode = "menu"
+            if count_checker():
+                mode = "menu"
 
         else:
             mode = "menu"
 
-    if mode == "menu":
-        if use_aruco:
-            for i in player_marker_list:
-                if i.marker_id == 6:#marker_idの6は"赤足.png"
-                    player_cursor = i.now_point
-
-        else:
-            player_cursor = pygame.mouse.get_pos()
-
-        count += 1
- 
-        spotlight(player_cursor)
+    elif mode == "menu":
+        player_cursor = (0, 0)
+        for i in player_marker_list:
+            if i.marker_id == 6:#marker_idの6は"赤足.png"
+                player_cursor = i.now_point
 
         menu_manager(player_cursor)#描画+エンティティーの動きを担当。
 
-    if mode == "play":
-        count += 1
-        if not count <= count_down_time:
-            if count % 600 == 0:
-                make_circle(random.randint(0,3))
+    elif mode == "play":
+        if scan_count % 600 == 0:
+            make_circle()
 
-
-
-
-        # level_list[0].set_alpha(easy_count)
-        # level_list[1].set_alpha(normal_count)
-        # level_list[2].set_alpha(hard_count)
-        # start_button_list[1].set_alpha(start_count)
-
-        # menu_surface.blit(game_level_frame, ((screen_width / 2) - 900,(screen_height / 2) - 500))
-        # menu_surface.blit(level_list[0], ((screen_width * 3 / 12) -300,(screen_height / 3) - 167))
-        # menu_surface.blit(level_list[1], ((screen_width * 6 / 12) -300,(screen_height / 3) - 167))
-        # menu_surface.blit(level_list[2], ((screen_width * 9 / 12) -300,(screen_height / 3) - 167))
-        # menu_surface.blit(start_button_list[0], ((screen_width / 2) -500,(screen_height * 4 / 5) -278))
-        # menu_surface.blit(start_button_list[1], ((screen_width / 2) -500,(screen_height * 4 / 5) -278))
-
-        # screen.blit(menu_surface,(0,0))
-        # screen.blit(cursor_surface,(0,0))
-        # if count % 5 == 0:
-
-    # if mode =="play":
-    #     #総フレーム数（カウント
-    #     count += 1
-
-    #     if count % 150 == 0:
-    #         for i in [red_feet,blue_feet]:
-    #             new_effect_circle = effect_circle(i[0],i[1])
-    #             effect_circle_list.append(new_effect_circle)
-
-    #     effect_surface.fill((0,0,0,255 // 20))
-    #     alive_effect_circle_list = []
-    #     for i in effect_circle_list:
-    #         if i.alive:
-    #             alive_effect_circle_list.append(i)
-
-    #     effect_circle_list = alive_effect_circle_list
-    #     for i in effect_circle_list:
-    #         i.draw()
-            
-    #     #円の座標を設定する
-    #     if  count % (circle_time * 125) == 0:
-    #         while abs(new_circle_x - last_circle_x) <= split_screen_x * 5 and abs(new_circle_y - last_circle_y) <= split_screen_y * 5:
-    #             new_circle_x = random.randint(edge_range,split_varue - edge_range) * split_screen_x
-    #             new_circle_y = random.randint(edge_range,split_varue - edge_range) * split_screen_y
-    #         new_circle = make_circle(new_circle_x,new_circle_y,circle_time,random.randint(0,len(circle_list) - 1))
-    #         circles.append(new_circle)
-    #         last_circle_x = new_circle_x
-    #         last_circle_y = new_circle_y
-
-    #     #surfaceの描画
-    #     alive_circles = []
-    #     for i in circles:
-    #         if i.alive:
-    #             alive_circles.append(i)
-                
-    #     for i in alive_circles:
-    #         i.update()
-    #         i.draw()
-
-    # #     for i in comment_q:
-    # #         i.update()
-    # #         i.draw()
-        
-    #     screen.blit(comment_surface,(0,0))
 
     screen.blit(back_surface,(0,0))
 
