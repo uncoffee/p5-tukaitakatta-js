@@ -68,6 +68,7 @@ button_size = 1000#スタートボタンの大きさ
 
 
 #変更不可
+
 count_down_time *= fps
 
 level_file_list = ["easy.png" , "normal.png" , "hard.png"] #難易度のバリエーション
@@ -326,7 +327,7 @@ def player_chege_point(player):
     else:
         return player
 
-def image_changer(img_name,size):
+def image_maker(img_name,size):
     img = pygame.image.load(img_name)
     scale = size / img.get_width()
     img_data = pygame.transform.scale(img, (img.get_width()*scale, img.get_height()*scale))
@@ -378,11 +379,17 @@ class edge_marker(aruco_entity):
 class player_marker(aruco_entity):
     def __init__(self,marker_id,img_name,size,draw_point):
         self.img_size = 180
-        self.img = image_changer(img_name,size)
+        self.img = image_maker(img_name,size)
+        draw_point = set_img_point(draw_point,size)
+        self.push_range = 0,0,0,0
 
         super().__init__(marker_id,draw_point)
 
     def draw(self, mode):
+        img_point = set_img_point(self.draw_point,self.img_size)
+        clear = 255 - self.clear
+        self.img.set_alpha(clear)
+
         if mode == "set":
             if self.count < 5:
                 back_surface.blit(self.img,self.set_point)
@@ -391,13 +398,53 @@ class player_marker(aruco_entity):
                 pygame.draw.circle(front_surface, (255,255,255),player_chege_point(self.now_point), 30)
 
         if mode == "play":
-            if self.clear > 0:
-                back_surface.blit(self.img,(self.draw_point[0]-self.img_size//2,self.draw_point[1]-self.img_size//2))
-                pygame.draw.circle(back_surface,(255,255,255),self.draw_point,self.clear + 30, 5)
+            if self.clear > 1:
+                front_surface.blit(self.img,img_point)
+                pygame.draw.circle(middle_surface,(255,255,255,clear),self.draw_point,self.clear + 50, 5)
 
                 if self.count < 5:
-                    pygame.draw.circle(back_surface, (255,255,255), player_chege_point(self.now_point), 30)
-                
+                    pygame.draw.circle(middle_surface, (255,255,255), player_chege_point(self.now_point), 30)
+
+            elif self.clear == 1:
+                x , y = self.draw_point
+                self.push_range = x-25, x+25,y-25, y+25
+                push_checker(self.now_point,self)#この50は赤青手足マークの大体の直径である。
+
+    def action(self):
+        print(" 音を出す")
+        if len(comment_list) == 1:
+            comment_list[0].make(self.draw_point)
+        else:
+            comment_list[random.randint(0,len(comment_list) - 1)].make(self.draw_point)
+        #音を出す。
+
+    def back_action(self):
+        print("連続取得数でも記録してそれを消すのに使いたいね。")
+        #連続取得数でも記録してそれを消すのに使いたいね。
+
+
+
+class coment_text:
+    def __init__(self,img_name):
+        self.img = image_maker(img_name,400)
+        self.draw_point = (0,0)
+        self.clear = 0
+
+    def make(self,draw_point):
+        p("叩いてるよ","n")
+        self.draw_point = draw_point
+        self.clear = 255
+
+    def draw(self):
+        self.img.set_alpha(self.clear)
+        front_surface.blit(self.img,self.draw_point)
+
+        self.clear -= 1
+        if self.clear < 0:
+            self.clear = 0
+
+        p("叩いてる","n")
+
                 
 
 def count_checker():
@@ -431,7 +478,7 @@ class level_entitys(menu_entity):
     def __init__(self,img_name,size,draw_point,push_range,level_seter):
         defa_clear = 50 #エンティティーの初期透明度の指定　min:0 max:255
         move = True
-        img = image_changer(img_name,size)
+        img = image_maker(img_name,size)
 
         super().__init__(img_name,img,draw_point,defa_clear,move)
 
@@ -465,7 +512,7 @@ class back_entity(menu_entity):
     def __init__(self,img_name,size,draw_point):
         defa_clear = 255
         move = False
-        img = image_changer(img_name,size)
+        img = image_maker(img_name,size)
         super().__init__(img_name,img,draw_point,defa_clear,move)
 
 
@@ -479,7 +526,7 @@ class start_button_entity(menu_entity):
             defa_clear = 0 #エンティティーの初期透明度の指定　min:0 max:255
             move = True
 
-        img = image_changer(img_name,size)
+        img = image_maker(img_name,size)
         super().__init__(img_name,img,draw_point,defa_clear,move)
 
         self.mode_seter = mode_seter
@@ -514,39 +561,38 @@ class start_button_entity(menu_entity):
 
 
 
-class play_entity:
-    def __init__(self,marker_id,img,spawn_point,add_clear):
-        self.marker_id = marker_id
-        self.img = img
-        self.spawn_point = spawn_point#二つの値を返さないとエラー吐く
-        self.add_clear = add_clear
-        self.alive = True#円が完全に出現したら、Falseになる。
-        self.clear = 0
+# class play_entity:
+#     def __init__(self,marker_id,img,spawn_point,add_clear):
+#         self.marker_id = marker_id
+#         self.img = img
+#         self.spawn_point = spawn_point#二つの値を返さないとエラー吐く
+#         self.add_clear = add_clear
+#         self.alive = True#円が完全に出現したら、Falseになる。
+#         self.clear = 0
     
-    def move_marker(self):
-        self.img.set_alpha(self.clear)
-        back_surface.blit(self.img,self.spawn_point)
+#     def move_marker(self):
+#         self.img.set_alpha(self.clear)
+#         back_surface.blit(self.img,self.spawn_point)
 
-        if self.alive:
-            self.clear += self.add_clear
-            if self.clear > 255:#完全に不透明な値255
-                self.alive = False
+#         if self.alive:
+#             self.clear += self.add_clear
+#             if self.clear > 255:#完全に不透明な値255
+#                 self.alive = False
             
 
 
 
 
 def push_checker(cursor,entity):
-    if entity.move == True:
-        #aから始まるものはアンダー（底辺）に当たる座標。tから始まるものはトップ（上底）に当たる座標。
-        a_x , t_x , a_y , t_y = entity.push_range
-        c_x , c_y = cursor
+    #aから始まるものはアンダー（底辺）に当たる座標。tから始まるものはトップ（上底）に当たる座標。
+    a_x , t_x , a_y , t_y = entity.push_range
+    c_x , c_y = cursor
 
-        if a_x <= c_x <= t_x and a_y <= c_y <= t_y:
-            entity.action()
+    if a_x <= c_x <= t_x and a_y <= c_y <= t_y:
+        entity.action()
 
-        else:
-            entity.back_action()
+    else:
+        entity.back_action()
 
 def p(text,time):
     if time == "n":
@@ -555,6 +601,11 @@ def p(text,time):
 
     if time % 50 == 0:
         print(text)
+
+def set_img_point(draw_point,img_size):
+    d_x , d_y = draw_point
+    magnification = img_size / 180
+    return (int(-90 * magnification + d_x),int(-50 * magnification + d_y))
 
 
 
@@ -604,6 +655,11 @@ def menu_manager(cursor):
 
         else:
             back_surface.blit(i.img, (draw_x , draw_y))
+
+
+comment_list = [
+    coment_text("good.png"),
+]
 
 
 
@@ -703,12 +759,15 @@ while running:
         for i in menu_entity_list:
             i.draw()
 
-            if i.move == True:
+            if i.move:
                 push_checker(player.now_point,i)
 
     elif mode == "play":
         if scan_count % 600 == 0:
             make_circle()
+
+        for i in comment_list:
+            i.draw()
 
 
     
