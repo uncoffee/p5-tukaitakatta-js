@@ -56,8 +56,6 @@ comment_list = []
 
 edge_range = 3 #外周と生成円の距離HTMLのpaddingのノリ
 
-count_down_time = 2 #画面が切り替わった後の待機時間
-
 circle_size = 180#表示される円の大きさ
 
 level_frame_size = 1800#レベルを囲んでいる枠の大きさ
@@ -66,10 +64,11 @@ level_size = 600#難易度boxの大きさ
 
 button_size = 1000#スタートボタンの大きさ
 
+font = pygame.font.Font(None, 40)#文字の見た目/大きさを変更する。
+
+play_time = 60
 
 #変更不可
-
-count_down_time *= fps
 
 level_file_list = ["easy.png" , "normal.png" , "hard.png"] #難易度のバリエーション
 level_list = []
@@ -93,8 +92,6 @@ scan_count = 0
 
 color_count = 0
 
-half_circle = 20
-
 circles = []
 
 last_circle_x = 0
@@ -106,10 +103,6 @@ new_circle_y = 0
 split_screen_x = screen_width / split_varue
 split_screen_y = screen_height / split_varue
 
-comment_x = 0
-comment_y = 0
-comment_text = ""
-comment_q = []
 
 #surfaceの設定
 pygame.display.set_caption("デジタル体育")
@@ -765,6 +758,7 @@ while running:
     elif mode == "play":
         if scan_count % 600 == 0:
             make_circle()
+            #右上にカウントダウンタイマーを置きたい。フォントは指定済み（一番上）
 
         for i in comment_list:
             i.draw()
