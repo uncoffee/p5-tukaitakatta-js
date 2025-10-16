@@ -387,10 +387,8 @@ class player_marker(aruco_entity):
             if self.count < 5:
                 back_surface.blit(self.img,self.set_point)
         if mode == "menu":
-            for i in set_entity_list:
-                if i.marker_id == 6:#marker_idの6は"赤足.png"
-                    if self.count < 5:
-                        pygame.draw.circle(back_surface, (255,255,255),player_chege_point(self.now_point), 30)
+            if self.marker_id == 6:#id6は赤足
+                pygame.draw.circle(front_surface, (255,255,255),player_chege_point(self.now_point), 30)
 
         if mode == "play":
             if self.clear > 0:
@@ -399,6 +397,7 @@ class player_marker(aruco_entity):
 
                 if self.count < 5:
                     pygame.draw.circle(back_surface, (255,255,255), player_chege_point(self.now_point), 30)
+                
                 
 
 def count_checker():
@@ -418,6 +417,14 @@ class menu_entity:
         self.now_clear = defa_clear#今の透明度を表す値
         self.move = move#動くエンティティーかどうか(surfaceを区別する為)
 
+    def draw(self):
+        if self.move == True:
+            self.img.set_alpha(self.now_clear)
+            middle_surface.blit(self.img, self.draw_point)
+
+        else:
+            back_surface.blit(self.img, self.draw_point)
+        
 
 
 class level_entitys(menu_entity):
@@ -451,7 +458,6 @@ class level_entitys(menu_entity):
             self.now_clear -= 5
             if self.now_clear < self.defa_clear:
                 self.now_clear = self.defa_clear
-        
 
 
 
@@ -531,7 +537,8 @@ class play_entity:
 
 
 def push_checker(cursor,entity):
-     #aから始まるものはアンダー（底辺）に当たる座標。tから始まるものはトップ（上底）に当たる座標。
+    if entity.move == True:
+        #aから始まるものはアンダー（底辺）に当たる座標。tから始まるものはトップ（上底）に当たる座標。
         a_x , t_x , a_y , t_y = entity.push_range
         c_x , c_y = cursor
 
@@ -676,7 +683,7 @@ while running:
     back_surface.fill((0,0,0,0))
 
     scan_count += 1
-    scan_manager(scan_count, mode)#この関数からクラスの関数をたたいているため、描画もこれに含まれる。
+    scan_manager(scan_count, mode)#setmodeの時だけ妥協でカメラの画像を出力する。
 
     if mode == "set":
         if use_aruco:
@@ -687,16 +694,26 @@ while running:
             mode = "menu"
 
     elif mode == "menu":
-        player_cursor = (0, 0)
+        player = (0, 0)
         for i in player_marker_list:
             if i.marker_id == 6:#marker_idの6は"赤足.png"
-                player_cursor = i.now_point
+                player = i
+                player.draw(mode)
+        
+        for i in menu_entity_list:
+            i.draw()
 
-        menu_manager(player_cursor)#描画+エンティティーの動きを担当。
+            if i.move == True:
+                push_checker(player.now_point,i)
 
     elif mode == "play":
         if scan_count % 600 == 0:
             make_circle()
+
+
+    
+
+
 
     for e in set_entity_list:
         e.draw(mode)
