@@ -44,11 +44,11 @@ screen = pygame.display.set_mode((w, h),pygame.FULLSCREEN  | pygame.SCALED | pyg
 
 #変更可
 
-fps = 100#一秒間に画面更新をする回数
+fps = 50#一秒間に画面更新をする回数
 
 split_varue = 20 #円が出てくるマス目の細かさ
 
-use_aruco = False #True:設定したarucoマーカを追尾　False:マウスカードルを追尾
+use_aruco = True #True:設定したarucoマーカを追尾　False:マウスカードルを追尾
 
 comment_size = 200 #コメントのサイズを指定する
 comment_file_list = ["good.png"] #コメントのバリエーション　追加可能
@@ -95,14 +95,6 @@ back_surface = pygame.Surface((w,h),pygame.SRCALPHA)
 # move_entity_surface = pygame.Surface((w,h),pygame.SRCALPHA)
 # back_entity_surface = pygame.Surface((w,h),pygame.SRCALPHA)
 
-left_top = (0,0)
-right_top = (0,0)
-right_bottom = (0,0)
-left_bottom = (0,0)
-red_feet = (0,0,0)
-red_hand = (0,0,0)
-blue_feet = (0,0,0)
-blue_hand = (0,0,0)
 
 circle_time = 0
 
@@ -166,28 +158,36 @@ def change_y(A, B, now):
 def player_chege_point(player):
     mouse_y = 0
     mouse_x = 0
-    
+    left_top = (0,0)
+    right_top = (0,0)
+    right_bottom = (0,0)
+    left_bottom = (0,0)
+
     if use_aruco:
+        for i in edge_marker_list:
+            if i.name == "left_top":
+                left_top = i.now_point
+            if i.name == "right_top":
+                right_top = i.now_point
+            if i.name == "right_buttom":
+                right_bottom = i.now_point
+            if i.name == "left_buttom":
+                left_bottom = i.now_point
+        print(f"四隅の座標 :{left_top,right_top,right_bottom,left_bottom}")
 
-        try:
-            left_x = change_x(left_top,left_bottom,player)
-            right_x = change_x(right_top,right_bottom,player)
+        left_x = change_x(left_top,left_bottom,player)
+        right_x = change_x(right_top,right_bottom,player)
 
-            mouse_x = int(w * 0.8 * (player[0] - left_x) / (right_x - left_x) + w * 0.1)
+        mouse_x = int(w * 0.8 * (player[0] - left_x) / (right_x - left_x) + w * 0.1)
 
-            #print(f"横 :{left_x,player[0],right_x, mouse_x}")
-        except:
-            print("Error")
-            
-        try:
-            top_y = change_y(left_top,right_top,player)
-            bottom_y = change_y(left_bottom,right_bottom,player)
+        #print(f"横 :{left_x,player[0],right_x, mouse_x}")
 
-            mouse_y = int(h * 0.8 * (player[1] -  top_y) / (bottom_y - top_y) + h * 0.1)
+        top_y = change_y(left_top,right_top,player)
+        bottom_y = change_y(left_bottom,right_bottom,player)
 
-            #print(f"縦 :{top_y,player[1],bottom_y, mouse_y}")
-        except:
-            print("Error")
+        mouse_y = int(h * 0.8 * (player[1] -  top_y) / (bottom_y - top_y) + h * 0.1)
+
+        #print(f"縦 :{top_y,player[1],bottom_y, mouse_y}")
 
         return mouse_x , mouse_y
     else:
@@ -236,7 +236,7 @@ class edge_marker(aruco_entity):
 
     def draw(self, mode):
         if mode == "set":
-            if self.now_point == (0,0):
+            if not self.count < 5:
                 pygame.draw.circle(back_surface, (255,255,255),(self.set_point), 30)
             else:
                 pygame.draw.circle(back_surface, (255,0,0),(self.set_point), 30)
@@ -274,7 +274,7 @@ class player_marker(aruco_entity):
             elif self.clear == 1:
                 x , y = self.draw_point
                 self.push_range = x-45, x+45,y-45, y+45#ここの値を後で変える。
-                push_checker(self.now_point,self)#この50は赤青手足マークの大体の直径である。
+                push_checker(player_chege_point(self.now_point),self)#この50は赤青手足マークの大体の直径である。
 
     def action(self):
         if len(comment_list) == 1:
@@ -534,7 +534,7 @@ def scan_manager(scan_count,mode):
 
                         for j in set_entity_list:
                             if j.marker_id == int(ID):
-                                j.set_now_point(ave)
+                                    j.set_now_point(ave)
     else:
         for j in set_entity_list:
             if j.marker_id == 6:
@@ -597,7 +597,7 @@ back_entity_list = [
 menu_entity_list = level_entity_list + start_button_list + back_entity_list #メニューモードで使うリスト
 
 
-count_timer = counter(100)#play時間を指定
+count_timer = counter(60)#play時間を指定
 
 
 count_result = play_result()
@@ -607,7 +607,7 @@ aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
 aruco_params = cv2.aruco.DetectorParameters()
 aruco_detector = cv2.aruco.ArucoDetector(aruco_dict, aruco_params)
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 if use_aruco:
     ret, frame = cap.read()
@@ -660,12 +660,14 @@ while running:
             if i.marker_id == 6:#marker_idの6は"赤足.png"
                 player = i
                 player.draw(mode)
+
+        p(player.now_point,"n")
         
         for i in menu_entity_list:
             i.draw()
 
             if i.move:
-                push_checker(player.now_point,i)
+                push_checker(player_chege_point(player.now_point),i)
 
     elif mode == "play":
         if scan_count % int(fps*circle_time) == 0:
