@@ -21,15 +21,15 @@ pygame.init()
 #     screen_mode = int(input("画面モードを選択してください (0: 1280x720, 1: 1920x1080 フルスクリーン): "))
     
 #     if screen_mode == 0:
-#         screen_width = 1280
-#         screen_height = 720
-#         screen = pygame.display.set_mode((screen_width, screen_height))
+#         w = 1280
+#         h = 720
+#         screen = pygame.display.set_mode((w, h))
 #         mode_check = False
 
 #     if screen_mode == 1:
-#         screen_width = 1920
-#         screen_height = 1080
-#         screen = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREEN | pygame.HWSURFACE)
+#         w = 1920
+#         h = 1080
+#         screen = pygame.display.set_mode((w, h), pygame.FULLSCREEN | pygame.HWSURFACE)
 #         mode_check = False
 
 #pygameの中で使う画像の比率
@@ -37,9 +37,9 @@ pygame.init()
 
 #pygameの中で使う変数の宣言
 
-screen_width = 1920
-screen_height = 1080
-screen = pygame.display.set_mode((screen_width, screen_height),pygame.FULLSCREEN  | pygame.SCALED | pygame.HWSURFACE)
+w = 1920
+h = 1080
+screen = pygame.display.set_mode((w, h),pygame.FULLSCREEN  | pygame.SCALED | pygame.HWSURFACE)
 
 
 #変更可
@@ -54,8 +54,6 @@ comment_size = 200 #コメントのサイズを指定する
 comment_file_list = ["good.png"] #コメントのバリエーション　追加可能
 comment_list = []
 
-edge_range = 3 #外周と生成円の距離HTMLのpaddingのノリ
-
 circle_size = 180#表示される円の大きさ
 
 level_frame_size = 1800#レベルを囲んでいる枠の大きさ
@@ -64,23 +62,9 @@ level_size = 600#難易度boxの大きさ
 
 button_size = 1000#スタートボタンの大きさ
 
-font = pygame.font.Font(None, 40)#文字の見た目/大きさを変更する。
-
 play_time = 60
 
 #変更不可
-
-level_file_list = ["easy.png" , "normal.png" , "hard.png"] #難易度のバリエーション
-level_list = []
-
-start_button_file_list = ["start_button.png" , "start_button_frame.png"]
-start_button_list = []
-
-
-design_file_list = [
-    ("level_frame.png",1800)
-]
-design_list = [] 
 
 mode = "set"
 
@@ -90,39 +74,26 @@ game_point = 0
 
 scan_count = 0
 
-color_count = 0
-
-circles = []
-
-last_circle_x = 0
-last_circle_y = 0
-
-new_circle_x = 0
-new_circle_y = 0
-
-split_screen_x = screen_width / split_varue
-split_screen_y = screen_height / split_varue
-
 
 #surfaceの設定
 pygame.display.set_caption("デジタル体育")
 
-front_surface = pygame.Surface((screen_width,screen_height), pygame.SRCALPHA)
+front_surface = pygame.Surface((w,h), pygame.SRCALPHA)
 
-middle_surface = pygame.Surface((screen_width,screen_height), pygame.SRCALPHA)
+middle_surface = pygame.Surface((w,h), pygame.SRCALPHA)
 
-back_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
+back_surface = pygame.Surface((w,h),pygame.SRCALPHA)
 
 
 
-# comment_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
+# comment_surface = pygame.Surface((w,h),pygame.SRCALPHA)
 
-# check_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
+# check_surface = pygame.Surface((w,h),pygame.SRCALPHA)
 
-# cursor_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
+# cursor_surface = pygame.Surface((w,h),pygame.SRCALPHA)
 
-# move_entity_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
-# back_entity_surface = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
+# move_entity_surface = pygame.Surface((w,h),pygame.SRCALPHA)
+# back_entity_surface = pygame.Surface((w,h),pygame.SRCALPHA)
 
 left_top = (0,0)
 right_top = (0,0)
@@ -249,7 +220,7 @@ def random_position(length):
 
 def make_circle():
     m = random.choice(player_marker_list)
-    m.draw_point = (random_position(screen_width),random_position(screen_height))
+    m.draw_point = (random_position(w),random_position(h))
     m.clear = 255
 
 class tap_comment:
@@ -300,7 +271,7 @@ def player_chege_point(player):
             left_x = change_x(left_top,left_bottom,player)
             right_x = change_x(right_top,right_bottom,player)
 
-            mouse_x = int(screen_width * 0.8 * (player[0] - left_x) / (right_x - left_x) + screen_width * 0.1)
+            mouse_x = int(w * 0.8 * (player[0] - left_x) / (right_x - left_x) + w * 0.1)
 
             #print(f"横 :{left_x,player[0],right_x, mouse_x}")
         except:
@@ -310,7 +281,7 @@ def player_chege_point(player):
             top_y = change_y(left_top,right_top,player)
             bottom_y = change_y(left_bottom,right_bottom,player)
 
-            mouse_y = int(screen_height * 0.8 * (player[1] -  top_y) / (bottom_y - top_y) + screen_height * 0.1)
+            mouse_y = int(h * 0.8 * (player[1] -  top_y) / (bottom_y - top_y) + h * 0.1)
 
             #print(f"縦 :{top_y,player[1],bottom_y, mouse_y}")
         except:
@@ -404,17 +375,15 @@ class player_marker(aruco_entity):
                 push_checker(self.now_point,self)#この50は赤青手足マークの大体の直径である。
 
     def action(self):
-        print(" 音を出す")
         if len(comment_list) == 1:
             comment_list[0].make(self.draw_point)
         else:
             comment_list[random.randint(0,len(comment_list) - 1)].make(self.draw_point)
+            count_result.touch()
         #音を出す。
 
     def back_action(self):
-        print("連続取得数でも記録してそれを消すのに使いたいね。")
-        #連続取得数でも記録してそれを消すのに使いたいね。
-
+        count_result.miss()
 
 
 class coment_text:
@@ -551,27 +520,61 @@ class start_button_entity(menu_entity):
         if self.now_clear < self.defa_clear:
             self.now_clear = self.defa_clear
 
-
-
-
-# class play_entity:
-#     def __init__(self,marker_id,img,spawn_point,add_clear):
-#         self.marker_id = marker_id
-#         self.img = img
-#         self.spawn_point = spawn_point#二つの値を返さないとエラー吐く
-#         self.add_clear = add_clear
-#         self.alive = True#円が完全に出現したら、Falseになる。
-#         self.clear = 0
+        
+def text_draw(text,font,draw_point,get_color = None):
+    if not get_color == None:
+        color = get_color
     
-#     def move_marker(self):
-#         self.img.set_alpha(self.clear)
-#         back_surface.blit(self.img,self.spawn_point)
+    else:
+        color = 255,255,255
 
-#         if self.alive:
-#             self.clear += self.add_clear
-#             if self.clear > 255:#完全に不透明な値255
-#                 self.alive = False
-            
+    text_surface = font.render(str(text), True, color)
+    text_rect = text_surface.get_rect()
+    text_rect.center = (draw_point)
+    
+    screen.blit(text_surface, text_rect)
+
+
+class counter:
+    def __init__(self,count_time):
+        self.defa_time = count_time
+        self.count_time = self.defa_time
+
+    def count(self):
+        if self.count_time < 0:
+            return True
+
+        else:
+            self.count_time -= 1
+            return False
+        
+    def draw(self):
+        text_draw(self.count_time,pygame.font.Font(None, 100),(w / 20 * 18,h / 20 * 1))
+
+        
+class play_result:
+    def __init__(self):
+        self.combo = 0
+        self.get_touch = 0
+        self.miss_touch = 0
+        self.score = 0
+
+    def touch(self):
+        self.get_touch += 1
+        self.combo += 1
+        self.score += int(self.combo / 10 + 1) * 100
+
+    def miss(self):
+        self.combo = 0
+        self.miss_touch += 1
+
+    def draw(self):
+        text_draw(f"スコア:{self.score}",pygame.font.Font(None,500),(w/2,h/4))#,64,224,208
+        text_draw(f"さいｓｙ"self.combo,pygame.font.Font(None,350),(w/20*17,h/2))
+        text_draw(self.get_touch,pygame.font.Font(None,200),(w/20*3,h/5*3))
+        text_draw(self.miss_touch,pygame.font.Font(None,200),(w/20*3,h/5*4))
+
+
 
 
 
@@ -613,7 +616,7 @@ def scan_manager(scan_count,mode):
             frame = numpy.rot90(frame)
             if mode == "set":
                 opencv_cap_surface = pygame.surfarray.make_surface(frame)
-                screen.blit(opencv_cap_surface,(screen_width / 2 - 340,screen_height * 2 / 3 - 204))
+                screen.blit(opencv_cap_surface,(w / 2 - 340,h * 2 / 3 - 204))
 
             if scan_count % 5 == 0:#この5は、5フレームのことを指す。
                     
@@ -657,39 +660,45 @@ comment_list = [
 
 
 edge_marker_list = [
-    edge_marker(1,"left_top",[int(screen_width * 0.1),int(screen_height * 0.1)]),
-    edge_marker(2,"right_top",[int(screen_width * 0.9),int(screen_height * 0.1)]),
-    edge_marker(3,"right_buttom",[int(screen_width * 0.9),int(screen_height * 0.9)]),
-    edge_marker(4,"left_buttom",[int(screen_width * 0.1),int(screen_height * 0.9)])
+    edge_marker(1,"left_top",[int(w * 0.1),int(h * 0.1)]),
+    edge_marker(2,"right_top",[int(w * 0.9),int(h * 0.1)]),
+    edge_marker(3,"right_buttom",[int(w * 0.9),int(h * 0.9)]),
+    edge_marker(4,"left_buttom",[int(w * 0.1),int(h * 0.9)])
 ]
 
 player_marker_list = [
-    player_marker(5,"青足.png",circle_size,[(screen_width * 5 // 9) - 90,(screen_height * 1 // 9) - 50]),
-    player_marker(6,"赤足.png",circle_size,[(screen_width * 5 // 9) - 90,(screen_height * 2 // 9) - 50]),
-    player_marker(7,"青手.png",circle_size,[(screen_width * 4 // 9) - 90,(screen_height * 1 // 9) - 50]),
-    player_marker(8,"赤手.png",circle_size,[(screen_width * 4 // 9) - 90,(screen_height * 2 // 9) - 50])
+    player_marker(5,"青足.png",circle_size,[(w * 5 // 9) - 90,(h * 1 // 9) - 50]),
+    player_marker(6,"赤足.png",circle_size,[(w * 5 // 9) - 90,(h * 2 // 9) - 50]),
+    player_marker(7,"青手.png",circle_size,[(w * 4 // 9) - 90,(h * 1 // 9) - 50]),
+    player_marker(8,"赤手.png",circle_size,[(w * 4 // 9) - 90,(h * 2 // 9) - 50])
 ]
 
 set_entity_list = edge_marker_list + player_marker_list #セットモードで使うリスト+座標設定にも使ってる。
 
-level_entity_list = [
-    level_entitys("easy.png",level_size,((screen_width * 3 / 12) -300,(screen_height / 3) - 167),(277,679,242,485),"easy"),
-    level_entitys("normal.png",level_size,((screen_width * 6 / 12) -300,(screen_height / 3) - 167),(757,1159,242,485),"normal"),
-    level_entitys("hard.png",level_size,((screen_width * 9 / 12) -300,(screen_height / 3) - 167),(1237,1639,242,485),"hard")
 
+
+level_entity_list = [
+    level_entitys("easy.png",level_size,((w * 3 / 12) -300,(h / 3) - 167),(277,679,242,485),"easy"),
+    level_entitys("normal.png",level_size,((w * 6 / 12) -300,(h / 3) - 167),(757,1159,242,485),"normal"),
+    level_entitys("hard.png",level_size,((w * 9 / 12) -300,(h / 3) - 167),(1237,1639,242,485),"hard")
 ]
 
 start_button_list = [
-    start_button_entity("start_button.png",button_size,((screen_width / 2) -500,(screen_height * 4 / 5) -278),None,None),
-    start_button_entity("start_button_frame.png",button_size,((screen_width / 2) -500,(screen_height * 4 / 5) -278),(524,1398,734,1006),"play")
+    start_button_entity("start_button.png",button_size,((w / 2) -500,(h * 4 / 5) -278),None,None),
+    start_button_entity("start_button_frame.png",button_size,((w / 2) -500,(h * 4 / 5) -278),(524,1398,734,1006),"play")
 ]
 
 back_entity_list = [
-    back_entity("level_frame.png",level_frame_size,((screen_width / 2) - 900,(screen_height / 2) - 500))
+    back_entity("level_frame.png",level_frame_size,((w / 2) - 900,(h / 2) - 500))
 ]
 
 menu_entity_list = level_entity_list + start_button_list + back_entity_list #メニューモードで使うリスト
 
+
+count_timer = counter(10)
+
+
+count_result = play_result()
 
 
 aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
@@ -709,9 +718,10 @@ else:
     print("現在の設定ではuse_arucoはFalseです。")
     print("カメラを使用せずに開始します。")
 
-    #ウィンドウの状況
+scan_count = 0
+count = 0
 
-# 4. ゲームループ
+
 running = True
 while running:
 
@@ -756,12 +766,21 @@ while running:
                 push_checker(player.now_point,i)
 
     elif mode == "play":
-        if scan_count % 600 == 0:
+        if scan_count % int(fps*6) == 0:
             make_circle()
-            #右上にカウントダウンタイマーを置きたい。フォントは指定済み（一番上）
+
+        if scan_count % fps == 0:
+            if count_timer.count():
+                mode = "end"
+
+        count_timer.draw()
 
         for i in comment_list:
             i.draw()
+
+    elif mode == "end":
+        count_result.draw()
+        
 
 
     
