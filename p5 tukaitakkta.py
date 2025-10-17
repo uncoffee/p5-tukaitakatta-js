@@ -110,10 +110,10 @@ check_count = 0
 
 if mode == "play":
     if difficulty_level == "easy":
-        circle_time = 10
+        circle_time = 7
 
     if difficulty_level == "normal":
-        circle_time = 7
+        circle_time = 6
 
     if difficulty_level == "hard":
         circle_time = 5
@@ -141,79 +141,6 @@ def backcolor(h,s,v):
 
     return r*255,g*255,b*255
 
-    #cps　「1秒間に～」の間隔 後で単位を調整したい　下のコメントチェック
-default_size = 50#最終円のサイズ指定
-class play_screen:
-    def __init__ (self,x,y,cps,circle_id):
-        self.alive = True
-        self.age = 0
-        self.size = default_size * 8
-        self.main_size = self.size
-        self.clear = 0
-        self.x = x
-        self.y = y
-        self.cps = cps
-        self.color = [255,255,255] #円の色の初期値
-        self.move = True
-        self.circle_id = circle_id
-        #self.lo = lo
-
-        #print(f"self.bps  {self.bps}")
-
-    
-    def update(self):
-        mouse_x = 0
-        mouse_y = 0
-        if use_aruco:
-            if self.circle_id + 5 == red_feet[2]:
-                mouse_x , mouse_y , id = red_feet
-
-            if self.circle_id + 5 == red_hand[2]:
-                mouse_x , mouse_y , id = red_hand
-        
-            if self.circle_id + 5 == blue_feet[2]:
-                mouse_x , mouse_y , id = blue_feet
-
-            if self.circle_id + 5 == blue_hand[2]:
-                mouse_x , mouse_y , id = blue_hand
-
-        else:
-            mouse_x , mouse_y = pygame.mouse.get_pos()
-
-        if self.move:#デフォルトサイズどうする?仮にsize 25とする
-            sa = self.main_size - default_size
-
-            temp = self.cps * fps
-
-            if self.size >= default_size:
-                self.size -= sa / temp
-            else:
-                self.size = default_size
-
-            self.clear += 200 / temp 
-            if self.clear >= 200:
-                self.clear = 200
-
-            self.age += 1
-            if self.age / temp >= 1:
-                self.move = False
-                self.age = 0
-        else:
-            global game_point
-
-            self.age += 1
-            if self.age / (fps * 0.1) >= 1:
-                self.clear -= 200 / (fps * 0.1)
-                if self.clear <= 0:
-                    self.alive = False
-
-            if self.alive:
-                if abs(self.x - mouse_x) <= default_size and abs(self.y - mouse_y) <= default_size:
-                    game_point += 1
-                    print(game_point)
-                    self.alive = False
-                    new_comment = tap_comment(self.x,self.y,comment_list[random.randint(0,len(comment_list)-1)])
-                    comment_q.append(new_comment)
         
 def random_position(length):
     return random.randint(split_varue, length - split_varue)
@@ -222,31 +149,6 @@ def make_circle():
     m = random.choice(player_marker_list)
     m.draw_point = (random_position(w),random_position(h))
     m.clear = 255
-
-class tap_comment:
-
-    def __init__(self,x,y,text):
-        self.x = x
-        self.y = y
-        self.text = text.copy()
-        self.text_time = 0
-        self.text_set = 0
-        self.clear = 255
-
-    def update(self):
-        self.clear -= 255 / (fps * 1)
-        if self.clear <= 0:
-            self.clear = 0
-        self.text.set_alpha(self.clear)
-
-
-    def draw(self):
-        if self.clear != 0:
-            screen.blit(self.text, (self.x, self.y))
-        else:
-            if self.clear == 0:
-                if self in comment_q:
-                    comment_q.remove(self)
     
 def change_x(A, B, now):
     x1, y1 = A
@@ -371,7 +273,7 @@ class player_marker(aruco_entity):
 
             elif self.clear == 1:
                 x , y = self.draw_point
-                self.push_range = x-25, x+25,y-25, y+25
+                self.push_range = x-45, x+45,y-45, y+45#ここの値を後で変える。
                 push_checker(self.now_point,self)#この50は赤青手足マークの大体の直径である。
 
     def action(self):
@@ -506,10 +408,10 @@ class start_button_entity(menu_entity):
             mode = self.mode_seter
 
             if difficulty_level == "easy":
-                circle_time = 10
+                circle_time = 7
 
             if difficulty_level == "normal":
-                circle_time = 7
+                circle_time = 6
 
             if difficulty_level == "hard":
                 circle_time = 5
@@ -541,7 +443,7 @@ class counter:
         self.count_time = self.defa_time
 
     def count(self):
-        if self.count_time < 0:
+        if self.count_time < 1:
             return True
 
         else:
@@ -569,10 +471,10 @@ class play_result:
         self.miss_touch += 1
 
     def draw(self):
-        text_draw(f"スコア:{self.score}",pygame.font.Font(None,500),(w/2,h/4))#,64,224,208
-        text_draw(f"さいｓｙ"self.combo,pygame.font.Font(None,350),(w/20*17,h/2))
-        text_draw(self.get_touch,pygame.font.Font(None,200),(w/20*3,h/5*3))
-        text_draw(self.miss_touch,pygame.font.Font(None,200),(w/20*3,h/5*4))
+        text_draw(f"score:{self.score}",pygame.font.Font(None,500),(w/2,h/4))#,64,224,208
+        text_draw(f"combo:{self.combo}",pygame.font.Font(None,200),(w/20*15,h/3*2))
+        text_draw(f"good:{self.get_touch}",pygame.font.Font(None,200),(w/20*3,h/5*3))
+        text_draw(f"miss:{self.miss_touch}",pygame.font.Font(None,200),(w/20*3,h/5*4))
 
 
 
@@ -695,7 +597,7 @@ back_entity_list = [
 menu_entity_list = level_entity_list + start_button_list + back_entity_list #メニューモードで使うリスト
 
 
-count_timer = counter(10)
+count_timer = counter(100)#play時間を指定
 
 
 count_result = play_result()
@@ -766,7 +668,7 @@ while running:
                 push_checker(player.now_point,i)
 
     elif mode == "play":
-        if scan_count % int(fps*6) == 0:
+        if scan_count % int(fps*circle_time) == 0:
             make_circle()
 
         if scan_count % fps == 0:
@@ -779,13 +681,7 @@ while running:
             i.draw()
 
     elif mode == "end":
-        count_result.draw()
-        
-
-
-    
-
-
+        count_result.draw()    
 
     for e in set_entity_list:
         e.draw(mode)
