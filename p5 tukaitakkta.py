@@ -10,49 +10,23 @@ import cv2 #pip install opencv-python モジュ:pip install opencv-contrib-pytho
 #pipいらない
 import random
 import colorsys
+import sys
 
-# 1. Pygame の初期化
 pygame.init()
-
-# 2. ウィンドウのサイズを設定  あとでプロジェクターのサイズに要調整。
-
-# mode_check = True
-# while mode_check:
-#     screen_mode = int(input("画面モードを選択してください (0: 1280x720, 1: 1920x1080 フルスクリーン): "))
-    
-#     if screen_mode == 0:
-#         w = 1280
-#         h = 720
-#         screen = pygame.display.set_mode((w, h))
-#         mode_check = False
-
-#     if screen_mode == 1:
-#         w = 1920
-#         h = 1080
-#         screen = pygame.display.set_mode((w, h), pygame.FULLSCREEN | pygame.HWSURFACE)
-#         mode_check = False
-
-#pygameの中で使う画像の比率
-
-
-#pygameの中で使う変数の宣言
 
 w = 1920
 h = 1080
 screen = pygame.display.set_mode((w, h),pygame.FULLSCREEN  | pygame.SCALED | pygame.HWSURFACE)
 
-
 #変更可
 
-fps = 50#一秒間に画面更新をする回数
+fps = 100#一秒間に画面更新をする回数
 
 split_varue = 20 #円が出てくるマス目の細かさ
 
-use_aruco = True #True:設定したarucoマーカを追尾　False:マウスカードルを追尾
+# use_aruco = True #True:設定したarucoマーカを追尾　False:マウスカードルを追尾
 
 comment_size = 200 #コメントのサイズを指定する
-comment_file_list = ["good.png"] #コメントのバリエーション　追加可能
-comment_list = []
 
 circle_size = 180#表示される円の大きさ
 
@@ -65,11 +39,6 @@ button_size = 1000#スタートボタンの大きさ
 play_time = 60
 
 #変更不可
-
-mode = "set"
-
-difficulty_level = "easy"
-
 game_point = 0
 
 scan_count = 0
@@ -85,55 +54,14 @@ middle_surface = pygame.Surface((w,h), pygame.SRCALPHA)
 back_surface = pygame.Surface((w,h),pygame.SRCALPHA)
 
 
-
-# comment_surface = pygame.Surface((w,h),pygame.SRCALPHA)
-
-# check_surface = pygame.Surface((w,h),pygame.SRCALPHA)
-
-# cursor_surface = pygame.Surface((w,h),pygame.SRCALPHA)
-
-# move_entity_surface = pygame.Surface((w,h),pygame.SRCALPHA)
-# back_entity_surface = pygame.Surface((w,h),pygame.SRCALPHA)
-
-
 circle_time = 0
 
 check_count = 0
 
-if mode == "play":
-    if difficulty_level == "easy":
-        circle_time = 7
-
-    if difficulty_level == "normal":
-        circle_time = 6
-
-    if difficulty_level == "hard":
-        circle_time = 5
-
 def random_color():
     return (random.randint(0,255),random.randint(0,255),random.randint(0,255))
 
-def set_color(color,change_value):
-    for i in range(len(color)):
-        color[i] -= change_value
-        if color[i] < 0:
-            color[i] = 0
 
-    return color
-
-team = 4
-
-def backcolor(h,s,v):
-
-    h/=100
-    s/=100
-    v/=100
-
-    r,g,b = colorsys.hsv_to_rgb(h,s,v)
-
-    return r*255,g*255,b*255
-
-        
 def random_position(length):
     return random.randint(split_varue, length - split_varue)
 
@@ -163,35 +91,33 @@ def player_chege_point(player):
     right_bottom = (0,0)
     left_bottom = (0,0)
 
-    if use_aruco:
-        for i in edge_marker_list:
-            if i.name == "left_top":
-                left_top = i.now_point
-            if i.name == "right_top":
-                right_top = i.now_point
-            if i.name == "right_buttom":
-                right_bottom = i.now_point
-            if i.name == "left_buttom":
-                left_bottom = i.now_point
-        print(f"四隅の座標 :{left_top,right_top,right_bottom,left_bottom}")
+    for i in edge_marker_list:
+        if i.name == "left_top":
+            left_top = i.now_point
+        if i.name == "right_top":
+            right_top = i.now_point
+        if i.name == "right_buttom":
+            right_bottom = i.now_point
+        if i.name == "left_buttom":
+            left_bottom = i.now_point
+    # print(f"四隅の座標 :{left_top,right_top,right_bottom,left_bottom}")
 
-        left_x = change_x(left_top,left_bottom,player)
-        right_x = change_x(right_top,right_bottom,player)
+    left_x = change_x(left_top,left_bottom,player)
+    right_x = change_x(right_top,right_bottom,player)
 
-        mouse_x = int(w * 0.8 * (player[0] - left_x) / (right_x - left_x) + w * 0.1)
+    mouse_x = int(w * 0.8 * (player[0] - left_x) / (right_x - left_x) + w * 0.1)
 
-        #print(f"横 :{left_x,player[0],right_x, mouse_x}")
+    #print(f"横 :{left_x,player[0],right_x, mouse_x}")
 
-        top_y = change_y(left_top,right_top,player)
-        bottom_y = change_y(left_bottom,right_bottom,player)
+    top_y = change_y(left_top,right_top,player)
+    bottom_y = change_y(left_bottom,right_bottom,player)
 
-        mouse_y = int(h * 0.8 * (player[1] -  top_y) / (bottom_y - top_y) + h * 0.1)
+    mouse_y = int(h * 0.8 * (player[1] -  top_y) / (bottom_y - top_y) + h * 0.1)
 
-        #print(f"縦 :{top_y,player[1],bottom_y, mouse_y}")
+    #print(f"縦 :{top_y,player[1],bottom_y, mouse_y}")
 
-        return mouse_x , mouse_y
-    else:
-        return player
+    return mouse_x , mouse_y
+
 
 def image_maker(img_name,size):
     img = pygame.image.load(img_name)
@@ -277,11 +203,8 @@ class player_marker(aruco_entity):
                 push_checker(player_chege_point(self.now_point),self)#この50は赤青手足マークの大体の直径である。
 
     def action(self):
-        if len(comment_list) == 1:
-            comment_list[0].make(self.draw_point)
-        else:
-            comment_list[random.randint(0,len(comment_list) - 1)].make(self.draw_point)
-            count_result.touch()
+        random.choice(comment_list).make(self.draw_point)
+        count_result.touch()
         #音を出す。
 
     def back_action(self):
@@ -400,21 +323,24 @@ class start_button_entity(menu_entity):
 
     
     def action(self):
-        self.now_clear += 3
-        if self.now_clear > 255:
-            self.now_clear = 255
-            global mode
-            global circle_time
-            mode = self.mode_seter
+        global difficulty_level
+        if difficulty_level != None:
+            self.now_clear += 3
+            if self.now_clear > 255:
+                self.now_clear = 0#またメニューに戻ってきても押せるようにリセットする。
+                global mode
+                global circle_time
+                mode = self.mode_seter
 
-            if difficulty_level == "easy":
-                circle_time = 7
+                if difficulty_level == "easy":
+                    circle_time = 7
 
-            if difficulty_level == "normal":
-                circle_time = 6
+                if difficulty_level == "normal":
+                    circle_time = 6
 
-            if difficulty_level == "hard":
-                circle_time = 5
+                if difficulty_level == "hard":
+                    circle_time = 5
+        
 
 
     def back_action(self):
@@ -438,12 +364,11 @@ def text_draw(text,font,draw_point,get_color = None):
 
 
 class counter:
-    def __init__(self,count_time):
-        self.defa_time = count_time
-        self.count_time = self.defa_time
+    def __init__(self):
+        self.count_time = -1#マイナスの状態であれば表示されない。
 
     def count(self):
-        if self.count_time < 1:
+        if self.count_time >= 0:
             return True
 
         else:
@@ -451,7 +376,11 @@ class counter:
             return False
         
     def draw(self):
-        text_draw(self.count_time,pygame.font.Font(None, 100),(w / 20 * 18,h / 20 * 1))
+        if self.count_time >= 0:
+            text_draw(self.count_time,pygame.font.Font(None, 100),(w / 20 * 18,h / 20 * 1))
+
+    def reset(self,time):
+        self.count_time = time
 
         
 class play_result:
@@ -477,10 +406,6 @@ class play_result:
         text_draw(f"miss:{self.miss_touch}",pygame.font.Font(None,200),(w/20*3,h/5*4))
 
 
-
-
-
-
 def push_checker(cursor,entity):
     #aから始まるものはアンダー（底辺）に当たる座標。tから始まるものはトップ（上底）に当たる座標。
     a_x , t_x , a_y , t_y = entity.push_range
@@ -495,9 +420,8 @@ def push_checker(cursor,entity):
 def p(text,time):
     if time == "n":
         print(text)
-        return
 
-    if time % 50 == 0:
+    elif time % 50 == 0:
         print(text)
 
 def set_img_point(draw_point,img_size):
@@ -597,7 +521,7 @@ back_entity_list = [
 menu_entity_list = level_entity_list + start_button_list + back_entity_list #メニューモードで使うリスト
 
 
-count_timer = counter(60)#play時間を指定
+count_timer = counter()
 
 
 count_result = play_result()
@@ -608,17 +532,17 @@ aruco_params = cv2.aruco.DetectorParameters()
 aruco_detector = cv2.aruco.ArucoDetector(aruco_dict, aruco_params)
 
 cap = cv2.VideoCapture(1)
-
-if use_aruco:
-    ret, frame = cap.read()
-    while ret != True:
-        print("カメラが接続されていません。")
-        ret, frame = cap.read()
-
-    print("カメラの接続が確認されました。")
-else:
+ret, frame = cap.read()
+if ret != True: #while文からif文に変えた。
+    use_aruco = False
+    mode = "menu" #スキャンするカメラがないためメニューから。
+    print("カメラが接続されていません。")
     print("現在の設定ではuse_arucoはFalseです。")
     print("カメラを使用せずに開始します。")
+
+else:
+    use_aruco = True
+    print("カメラの接続が確認されました。")
 
 scan_count = 0
 count = 0
@@ -626,8 +550,6 @@ count = 0
 
 running = True
 while running:
-
-    #ウィンドウの状況をチェック
     
     for event in pygame.event.get():
 
@@ -646,12 +568,12 @@ while running:
     scan_count += 1
     scan_manager(scan_count, mode)#setmodeの時だけ妥協でカメラの画像を出力する。
 
-    if mode == "set":
-        if use_aruco:
-            if count_checker():
-                mode = "menu"
+    #タイマーを使いまわすためにここに配置。
+    count_timer.draw()
 
-        else:
+
+    if mode == "set":
+        if count_checker():
             mode = "menu"
 
     elif mode == "menu":
@@ -677,16 +599,18 @@ while running:
             if count_timer.count():
                 mode = "end"
 
-        count_timer.draw()
-
         for i in comment_list:
             i.draw()
+        
 
     elif mode == "end":
-        count_result.draw()    
+        count_result.draw() 
+
 
     for e in set_entity_list:
         e.draw(mode)
+
+
 
     screen.blit(back_surface,(0,0))
 
@@ -696,6 +620,7 @@ while running:
 
     pygame.display.update() 
 
-# 7. Pygame の終了処理
 pygame.quit()
 print("ウィンドウを閉じました。")
+
+sys.exit()#ごり押し処理　修正
