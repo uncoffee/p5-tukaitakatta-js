@@ -84,23 +84,27 @@ def change_y(A, B, now):
     return ((y1 - y2) / (x1 - x2)) * (now_x - x1) + y1
 
 def player_chege_point(player):
-    mouse_y = 0
-    mouse_x = 0
-    left_top = (0,0)
-    right_top = (0,0)
-    right_bottom = (0,0)
-    left_bottom = (0,0)
+    if use_aruco:
+        for i in edge_marker_list:
+            if i.name == "left_top":
+                left_top = i.now_point
+            if i.name == "right_top":
+                right_top = i.now_point
+            if i.name == "right_buttom":
+                right_bottom = i.now_point
+            if i.name == "left_buttom":
+                left_bottom = i.now_point
+        # print(f"四隅の座標 :{left_top,right_top,right_bottom,left_bottom}")
 
-    for i in edge_marker_list:
-        if i.name == "left_top":
-            left_top = i.now_point
-        if i.name == "right_top":
-            right_top = i.now_point
-        if i.name == "right_buttom":
-            right_bottom = i.now_point
-        if i.name == "left_buttom":
-            left_bottom = i.now_point
-    # print(f"四隅の座標 :{left_top,right_top,right_bottom,left_bottom}")
+    else:
+        # mouse_y = 0
+        # mouse_x = 0
+        # left_top = (0,0)
+        # right_top = (0,0)
+        # right_bottom = (0,0)
+        # left_bottom = (0,0)
+        return pygame.mouse.get_pos()
+        
 
     left_x = change_x(left_top,left_bottom,player)
     right_x = change_x(right_top,right_bottom,player)
@@ -434,35 +438,31 @@ def set_img_point(draw_point,img_size):
 def scan_manager(scan_count,mode):
     for j in set_entity_list:
         j.count_plus1()
-    if use_aruco:
 
-        ret, frame = cap.read()
-        if ret:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame = numpy.rot90(frame)
-            if mode == "set":
-                opencv_cap_surface = pygame.surfarray.make_surface(frame)
-                screen.blit(opencv_cap_surface,(w / 2 - 340,h * 2 / 3 - 204))
+    ret, frame = cap.read()
+    if ret:
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame = numpy.rot90(frame)
+        if mode == "set":
+            opencv_cap_surface = pygame.surfarray.make_surface(frame)
+            screen.blit(opencv_cap_surface,(w / 2 - 340,h * 2 / 3 - 204))
 
-            if scan_count % 5 == 0:#この5は、5フレームのことを指す。
-                    
-                markers, ids, rejected = aruco_detector.detectMarkers(frame)
-                if ids is not None:
-                    for i in range(len(markers)):
-                        ID = ids[i]
-                        C1 = markers[i][0][0]
-                        C2 = markers[i][0][1]
-                        C3 = markers[i][0][2]
-                        C4 = markers[i][0][3]
-                        ave = int((C1[0] + C2[0] + C3[0] + C4[0]) / 4) , int((C1[1] + C2 [1] + C3[1] + C4[1]) / 4)
+        if scan_count % 5 == 0:#この5は、5フレームのことを指す。
+                
+            markers, ids, rejected = aruco_detector.detectMarkers(frame)
+            if ids is not None:
+                for i in range(len(markers)):
+                    ID = ids[i]
+                    C1 = markers[i][0][0]
+                    C2 = markers[i][0][1]
+                    C3 = markers[i][0][2]
+                    C4 = markers[i][0][3]
+                    ave = int((C1[0] + C2[0] + C3[0] + C4[0]) / 4) , int((C1[1] + C2 [1] + C3[1] + C4[1]) / 4)
 
-                        for j in set_entity_list:
-                            if j.marker_id == int(ID):
-                                    j.set_now_point(ave)
-    else:
-        for j in set_entity_list:
-            if j.marker_id == 6:
-                j.set_now_point(pygame.mouse.get_pos())
+                    for j in set_entity_list:
+                        if j.marker_id == int(ID):
+                                j.set_now_point(ave)
+
 
 
 
