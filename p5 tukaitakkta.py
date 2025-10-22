@@ -45,6 +45,8 @@ scan_count = 0
 
 
 #surfaceの設定
+difficulty_level = None
+
 pygame.display.set_caption("デジタル体育")
 
 front_surface = pygame.Surface((w,h), pygame.SRCALPHA)
@@ -344,6 +346,8 @@ class start_button_entity(menu_entity):
 
                 if difficulty_level == "hard":
                     circle_time = 5
+
+                count_timer.reset(60)
         
 
 
