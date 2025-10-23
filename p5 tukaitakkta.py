@@ -9,7 +9,6 @@ import cv2 #pip install opencv-python モジュ:pip install opencv-contrib-pytho
 
 #pipいらない
 import random
-import colorsys
 import sys
 
 pygame.init()
@@ -65,7 +64,8 @@ def random_color():
 
 
 def random_position(length):
-    return random.randint(split_varue, length - split_varue)
+    circle_spot = length / split_varue
+    return random.randint(circle_spot , length-circle_spot)
 
 def make_circle():
     m = random.choice(player_marker_list)
@@ -268,10 +268,14 @@ class menu_entity:
 
 
 class level_entitys(menu_entity):
-    def __init__(self,img_name,size,draw_point,push_range,level_seter):
-        defa_clear = 50 #エンティティーの初期透明度の指定　min:0 max:255
-        move = True
-        img = image_maker(img_name,size)
+    def __init__(self,img_name,size,draw_point,push_range,level_seter,move):
+        if move == True:
+            defa_clear = 0 #エンティティーの初期透明度の指定　min:0 max:255
+            img = image_maker(img_name,size)
+
+        else:
+            defa_clear = 255
+            img = image_maker(img_name,size)
 
         super().__init__(img_name,img,draw_point,defa_clear,move)
 
@@ -331,7 +335,7 @@ class start_button_entity(menu_entity):
     def action(self):
         global difficulty_level
         if difficulty_level != None:
-            self.now_clear += 3
+            self.now_clear += 5
             if self.now_clear > 255:
                 self.now_clear = 0#またメニューに戻ってきても押せるようにリセットする。
                 global mode
@@ -376,7 +380,7 @@ class counter:
         self.count_time = -1#マイナスの状態であれば表示されない。
 
     def count(self):
-        if self.count_time >= 0:
+        if self.count_time <= 0:
             return True
 
         else:
@@ -384,7 +388,7 @@ class counter:
             return False
         
     def draw(self):
-        if self.count_time >= 0:
+        if self.count_time > 0:
             text_draw(self.count_time,pygame.font.Font(None, 100),(w / 20 * 18,h / 20 * 1))
 
     def reset(self,time):
@@ -508,9 +512,12 @@ set_entity_list = edge_marker_list + player_marker_list #セットモードで�
 
 
 level_entity_list = [
-    level_entitys("easy.png",level_size,((w * 3 / 12) -300,(h / 3) - 167),(277,679,242,485),"easy"),
-    level_entitys("normal.png",level_size,((w * 6 / 12) -300,(h / 3) - 167),(757,1159,242,485),"normal"),
-    level_entitys("hard.png",level_size,((w * 9 / 12) -300,(h / 3) - 167),(1237,1639,242,485),"hard")
+    level_entitys("moveeasy.png",level_size,((w * 3 / 12) -300,(h / 3) - 167),(277,679,242,485),"easy",True),
+    level_entitys("easy.png",level_size,((w * 3 / 12) -300,(h / 3) - 167),None,None,False),
+    level_entitys("movenormal.png",level_size,((w * 6 / 12) -300,(h / 3) - 167),(757,1159,242,485),"normal",True),
+    level_entitys("normal.png",level_size,((w * 6 / 12) -300,(h / 3) - 167),None,None,False),
+    level_entitys("movehard.png",level_size,((w * 9 / 12) -300,(h / 3) - 167),(1237,1639,242,485),"hard",True),
+    level_entitys("hard.png",level_size,((w * 9 / 12) -300,(h / 3) - 167),None,None,False)
 ]
 
 start_button_list = [
@@ -522,7 +529,7 @@ back_entity_list = [
     back_entity("level_frame.png",level_frame_size,((w / 2) - 900,(h / 2) - 500))
 ]
 
-menu_entity_list = level_entity_list + start_button_list + back_entity_list #メニューモードで使うリスト
+menu_entity_list = back_entity_list + level_entity_list + start_button_list #メニューモードで使うリスト
 
 
 count_timer = counter()
@@ -602,13 +609,17 @@ while running:
         if scan_count % fps == 0:
             if count_timer.count():
                 mode = "end"
+                count_timer.reset(10)
 
         for i in comment_list:
             i.draw()
         
 
     elif mode == "end":
-        count_result.draw() 
+        count_result.draw()
+
+        if count_timer.count():
+            mode = "menu" 
 
 
     for e in set_entity_list:
