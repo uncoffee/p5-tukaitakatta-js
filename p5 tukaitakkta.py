@@ -5,11 +5,14 @@
 import numpy
 import pygame
 import cv2 #pip install opencv-python モジュ:pip install opencv-contrib-python
+import hid #pip install hidapi
+
 
 
 #pipいらない
 import random
 import sys
+import time
 
 pygame.init()
 
