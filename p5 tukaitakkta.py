@@ -2,14 +2,12 @@
 #pip install 打ち込むの忘れずにね！
 
 #pip要る
-import numpy
 import pygame
 import cv2 #pip install opencv-python モジュ:pip install opencv-contrib-python
 import hid #pip install hidapi
 
-
-
 #pipいらない
+import numpy
 import random
 import sys
 import time
@@ -203,13 +201,13 @@ class player_marker(aruco_entity):
                 front_surface.blit(self.img,img_point)
                 pygame.draw.circle(middle_surface,(255,255,255,clear),self.draw_point,self.clear + 50, 5)
 
-                if self.count < 5:
-                    pygame.draw.circle(middle_surface, (255,255,255), player_chege_point(self.now_point), 30)
+                # if self.count < 5:
+                #     pygame.draw.circle(middle_surface, (255,255,255), player_chege_point(self.now_point), 30)
 
             elif self.clear == 1:
                 x , y = self.draw_point
                 self.push_range = x-45, x+45,y-45, y+45#ここの値を後で変える。
-                push_checker(player_chege_point(self.now_point),self)#この50は赤青手足マークの大体の直径である。
+                push_checker(player_chege_point(self.now_point),self)
 
     def action(self):
         random.choice(comment_list).make(self.draw_point)
@@ -218,6 +216,25 @@ class player_marker(aruco_entity):
 
     def back_action(self):
         count_result.miss()
+
+
+
+class junp_entity:
+    def __init__(self,img_name,size):
+        self.img_name = img_name
+        self.size = size
+
+        img_list = []
+        for i in img_name:
+            img_list.append(image_maker(i,self.size))
+        self.img = img_list
+
+def img_range_changer(size):
+    #25この値は 666px * 375pxの画像をpygameに落とした後、描画サイズ1に対して、200分の1px画素数の値（これは半径である。）
+    size * 25
+
+    #flootを使いたくなかったため倍々にした為ここで、除算をしている
+    return size // 100
 
 
 class coment_text:
@@ -238,8 +255,6 @@ class coment_text:
         self.clear -= 1
         if self.clear < 0:
             self.clear = 0
-
-        p("叩いてる","n")
 
                 
 
@@ -376,6 +391,7 @@ def text_draw(text,font,draw_point,get_color = None):
     text_rect.center = (draw_point)
     
     screen.blit(text_surface, text_rect)
+
 
 
 class counter:

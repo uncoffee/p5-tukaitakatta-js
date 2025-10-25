@@ -21,6 +21,8 @@ HID_OUTPUT_REPORT_ID = 0x12 # データレポート形式設定のためのコ�
 # 2. 接続が確立され、OSがデバイスをHIDデバイスとして認識した状態にする。
 # ----------------------------------------------------
 
+count = 0
+
 def calculate_accelerometer(report):
     """
     Wiiリモコンのレポート0x31から加速度値を抽出・計算する (簡略版)。
@@ -152,6 +154,7 @@ def communicate_with_wiimote(vid, pid):
                     
                     if accel_data:
                         raw_x, raw_y, raw_z = accel_data
+                        # print(raw_x, raw_y, raw_z)
                         
                         # 加速度の合計の大きさを計算
                         magnitude = calculate_jump_magnitude(
@@ -162,25 +165,24 @@ def communicate_with_wiimote(vid, pid):
                         
                         # 状態遷移によるジャンプ判定 (誤判定防止のため)
                         new_state = jump_state
-                        if jump_state == "IDLE" and magnitude > JUMP_THRESHOLD_HIGH and raw_y > 1000:
+                        if jump_state == "IDLE" and raw_y >= 680:
                             # 待機中 -> 高いピークを検出 -> 踏み切り状態へ
                             new_state = "TAKEOFF"
-                        elif jump_state == "TAKEOFF" and magnitude < JUMP_THRESHOLD_LOW:
-                            # 踏み切り状態 -> 自由落下に近い谷を検出 -> 空中状態へ
-                            new_state = "AIRBORNE"
-                            print("--- [JUMP!] --- 空中状態に入りました。")
-                        elif jump_state == "AIRBORNE" and magnitude > JUMP_THRESHOLD_HIGH * 1.5:
-                            # 空中状態 -> 大きな衝撃を検出 -> 着地 -> 待機状態へ
-                            new_state = "IDLE"
-                            print("--- [LANDED] --- 着地を検出しました。")
+                            jump_g = raw_y
+
+                        # elif jump_state == "TAKEOFF" and raw_y <= jump_g - raw_y <= 480:
+                        #     # 空中状態 -> 大きな衝撃を検出 -> 着地 -> 待機状態へ
+                        #     new_state = "IDLE"
+                        #     print("--- [LANDED] --- 着地を検出しました。")
                         
                         jump_state = new_state
                         
                         # コンソール出力
-                        # print(
-                        #     f"X:{raw_x:4d} | Y:{raw_y:4d} | Z:{raw_z:4d} | "
-                        #     f"Mag:{magnitude:.2f}g | State: {jump_state}"
-                        # )
+                        # if count > 0:
+                        #     print(
+                        #         f"X:{raw_x:4d} | Y:{raw_y:4d} | Z:{raw_z:4d} | "
+                        #         f"Mag:{magnitude:.2f}g | State: {jump_state}"
+                        #     )
                     
                 # 別のレポート（例: 0x20, 0x21, 0x30 など）を受信した場合は無視し、コンソールを汚さない
                 else:
