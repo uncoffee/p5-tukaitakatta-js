@@ -65,8 +65,8 @@ def random_color():
 
 
 def random_position(length):
-    circle_spot = length / split_varue
-    return random.randint(circle_spot , length-circle_spot)
+    circle_spot = length // split_varue
+    return random.randint(circle_spot , length - circle_spot)
 
 def make_circle():
     m = random.choice(player_marker_list)
@@ -244,7 +244,6 @@ class coment_text:
         self.clear = 0
 
     def make(self,draw_point):
-        p("叩いてるよ","n")
         self.draw_point = draw_point
         self.clear = 255
 
@@ -520,10 +519,10 @@ edge_marker_list = [
 ]
 
 player_marker_list = [
-    player_marker(5,"青足.png",circle_size,[(w * 5 // 9) - 90,(h * 1 // 9) - 50]),
-    player_marker(6,"赤足.png",circle_size,[(w * 5 // 9) - 90,(h * 2 // 9) - 50]),
-    player_marker(7,"青手.png",circle_size,[(w * 4 // 9) - 90,(h * 1 // 9) - 50]),
-    player_marker(8,"赤手.png",circle_size,[(w * 4 // 9) - 90,(h * 2 // 9) - 50])
+    player_marker(5,"blue_feet.png",circle_size,[(w * 5 // 9) - 90,(h * 1 // 9) - 50]),
+    player_marker(6,"red_feet.png",circle_size,[(w * 5 // 9) - 90,(h * 2 // 9) - 50]),
+    player_marker(7,"blue_hand.png",circle_size,[(w * 4 // 9) - 90,(h * 1 // 9) - 50]),
+    player_marker(8,"red_hand.png",circle_size,[(w * 4 // 9) - 90,(h * 2 // 9) - 50])
 ]
 
 set_entity_list = edge_marker_list + player_marker_list #セットモードで使うリスト+座標設定にも使ってる。
@@ -612,8 +611,6 @@ while running:
             if i.marker_id == 6:#marker_idの6は"赤足.png"
                 player = i
                 player.draw(mode)
-
-        p(player.now_point,"n")
         
         for i in menu_entity_list:
             i.draw()
