@@ -86,7 +86,7 @@ def change_y(A, B, now):
     now_x, now_y = now
     return ((y1 - y2) / (x1 - x2)) * (now_x - x1) + y1
 
-def player_chege_point(player):
+def player_chenge_point(player):
     if use_aruco:
         for i in edge_marker_list:
             if i.name == "left_top":
@@ -194,7 +194,7 @@ class player_marker(aruco_entity):
                 back_surface.blit(self.img,self.set_point)
         if mode == "menu":
             if self.marker_id == 6:#id6は赤足
-                pygame.draw.circle(front_surface, (255,255,255),player_chege_point(self.now_point), 30)
+                pygame.draw.circle(front_surface, (255,255,255),player_chenge_point(self.now_point), 30)
 
         if mode == "play":
             if self.clear > 1:
@@ -202,12 +202,13 @@ class player_marker(aruco_entity):
                 pygame.draw.circle(middle_surface,(255,255,255,clear),self.draw_point,self.clear + 50, 5)
 
                 # if self.count < 5:
-                #     pygame.draw.circle(middle_surface, (255,255,255), player_chege_point(self.now_point), 30)
+                #     pygame.draw.circle(middle_surface, (255,255,255), player_chenge_point(self.now_point), 30)
 
             elif self.clear == 1:
                 x , y = self.draw_point
                 self.push_range = x-45, x+45,y-45, y+45#ここの値を後で変える。
-                push_checker(player_chege_point(self.now_point),self)
+                push_checker(player_chenge_point(self.now_point),self)
+
 
     def action(self):
         random.choice(comment_list).make(self.draw_point)
@@ -218,22 +219,71 @@ class player_marker(aruco_entity):
         count_result.miss()
 
 
-class junp_entity:
-    def __init__(self,img_name,size):
-        self.size = size
-        self.img = image_changer(img_name,size)
+class jump_entity:
+    def __init__(self,img_name,img_size):#5枚セットだから変数img_name_listはリスト型。
+        self.img_size = img_size
+        self.img = image_changer(img_name,img_size)
+            
         self.draw_point = 0,0
         self.clear = 255
+        self.jump_count = 0
+        self.push_count = 0
+        self.push_range = 0,0,0,0
 
-    def draw(self,mode,draw_point):
+    def make_jump_circle(self,draw_point):
+        self.draw_point = set_img_point(draw_point,self.img_size)
+        
+        #状態を初期化
+        self.clear = 255
+        self.push_count = 0
+        self.push_range = img_range_changer(self.img,self.img_size)
+ 
+    def draw(self,mode):
+        if mode == "set":
+            if self.jump_count >= 0:
+                front_surface.blit(self.img,self.draw_point)
+
         if mode == "play":
-            if clear
-            front_surface.blit(self.img,self.draw_point)
-            pygame.draw.circle(middle_surface,(255,255,255,clear),self.draw_point,self.clear + 50, 5)
+            if self.clear >= 1:
+                round_size = 255 - self.clear#255は完全に不透明になるアルファ値
+                front_surface.blit(self.img,self.draw_point)
+                pygame.draw.circle(middle_surface,(255,255,255,self.clear),self.draw_point, round_size + 30, 5)
+
+        self.jump_count -= 1
+        self.clear -= 1
+        if self.clear < 0:
+            self.clear = 0
+
+    def check(self):
+        if self.clear == 30:
+            for i in player_marker_list:
+                if i.img_name == "red_feet.png":
+                    red_feet = i.now_point
+
+                if i.img_name == "blue_feet.png":
+                    blue_feet = i.now_point
+
+            push_checker(player_chenge_point(red_feet),self)
+            push_checker(player_chenge_point(blue_feet),self)
+
+        if self.push == 2:
+            if 0 < self.clear <= 20:
+                if self.jump_count > 0:
+                    self.clear = 0
+                    count_result.jump()
+                    random.choice(comment_list).make(self.draw_point)
+                    
+    def action(self):
+        self.push_count += 1
+
+    def back_action(self):
+        self.push_count = 0
         
 
+
+        
 def img_range_changer(size):
-    #25この値は 666px * 375pxの画像をpygameに落とした後、描画サイズ1に対して、200分の1px画素数の値（これは半径である。）
+    #25この値は 666px * 375pxの画像をpygameに落とした後、描画サイズ1に対して、200分の1px画素数の値（これは半径である。）※円の画像基準
     size * 25
 
     #flootを使いたくなかったため倍々にした為ここで、除算をしている
@@ -432,6 +482,10 @@ class play_result:
         self.combo = 0
         self.miss_touch += 1
 
+    def jump(self):
+        self.score += 400
+
+
     def draw(self):
         text_draw(f"score:{self.score}",pygame.font.Font(None,500),(w/2,h/4))#,64,224,208
         text_draw(f"combo:{self.combo}",pygame.font.Font(None,200),(w/20*15,h/3*2))
@@ -619,7 +673,7 @@ while running:
             i.draw()
 
             if i.move:
-                push_checker(player_chege_point(player.now_point),i)
+                push_checker(player_chenge_point(player.now_point),i)
 
     elif mode == "play":
         if scan_count % int(fps*circle_time) == 0:
