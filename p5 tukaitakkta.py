@@ -126,7 +126,7 @@ def player_chege_point(player):
     return mouse_x , mouse_y
 
 
-def image_maker(img_name,size):
+def image_changer(img_name,size):
     img = pygame.image.load(img_name)
     scale = size / img.get_width()
     img_data = pygame.transform.scale(img, (img.get_width()*scale, img.get_height()*scale))
@@ -178,7 +178,7 @@ class edge_marker(aruco_entity):
 class player_marker(aruco_entity):
     def __init__(self,marker_id,img_name,size,draw_point):
         self.img_size = 180
-        self.img = image_maker(img_name,size)
+        self.img = image_changer(img_name,size)
         draw_point = set_img_point(draw_point,size)
         self.push_range = 0,0,0,0
 
@@ -218,16 +218,19 @@ class player_marker(aruco_entity):
         count_result.miss()
 
 
-
 class junp_entity:
     def __init__(self,img_name,size):
-        self.img_name = img_name
         self.size = size
+        self.img = image_changer(img_name,size)
+        self.draw_point = 0,0
+        self.clear = 255
 
-        img_list = []
-        for i in img_name:
-            img_list.append(image_maker(i,self.size))
-        self.img = img_list
+    def draw(self,mode,draw_point):
+        if mode == "play":
+            if clear
+            front_surface.blit(self.img,self.draw_point)
+            pygame.draw.circle(middle_surface,(255,255,255,clear),self.draw_point,self.clear + 50, 5)
+        
 
 def img_range_changer(size):
     #25この値は 666px * 375pxの画像をpygameに落とした後、描画サイズ1に対して、200分の1px画素数の値（これは半径である。）
@@ -239,7 +242,7 @@ def img_range_changer(size):
 
 class coment_text:
     def __init__(self,img_name):
-        self.img = image_maker(img_name,400)
+        self.img = image_changer(img_name,400)
         self.draw_point = (0,0)
         self.clear = 0
 
@@ -288,11 +291,11 @@ class level_entitys(menu_entity):
     def __init__(self,img_name,size,draw_point,push_range,level_seter,move):
         if move == True:
             defa_clear = 0 #エンティティーの初期透明度の指定　min:0 max:255
-            img = image_maker(img_name,size)
+            img = image_changer(img_name,size)
 
         else:
             defa_clear = 255
-            img = image_maker(img_name,size)
+            img = image_changer(img_name,size)
 
         super().__init__(img_name,img,draw_point,defa_clear,move)
 
@@ -326,7 +329,7 @@ class back_entity(menu_entity):
     def __init__(self,img_name,size,draw_point):
         defa_clear = 255
         move = False
-        img = image_maker(img_name,size)
+        img = image_changer(img_name,size)
         super().__init__(img_name,img,draw_point,defa_clear,move)
 
 
@@ -340,7 +343,7 @@ class start_button_entity(menu_entity):
             defa_clear = 0 #エンティティーの初期透明度の指定　min:0 max:255
             move = True
 
-        img = image_maker(img_name,size)
+        img = image_changer(img_name,size)
         super().__init__(img_name,img,draw_point,defa_clear,move)
 
         self.mode_seter = mode_seter
