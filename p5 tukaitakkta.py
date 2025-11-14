@@ -100,12 +100,6 @@ def player_chenge_point(player):
         # print(f"四隅の座標 :{left_top,right_top,right_bottom,left_bottom}")
 
     else:
-        # mouse_y = 0
-        # mouse_x = 0
-        # left_top = (0,0)
-        # right_top = (0,0)
-        # right_bottom = (0,0)
-        # left_bottom = (0,0)
         return pygame.mouse.get_pos()
         
 
@@ -200,9 +194,6 @@ class player_marker(aruco_entity):
             if self.clear > 1:
                 front_surface.blit(self.img,img_point)
                 pygame.draw.circle(middle_surface,(255,255,255,clear),self.draw_point,self.clear + 50, 5)
-
-                # if self.count < 5:
-                #     pygame.draw.circle(middle_surface, (255,255,255), player_chenge_point(self.now_point), 30)
 
             elif self.clear == 1:
                 x , y = self.draw_point
@@ -443,6 +434,27 @@ def text_draw(text,font,draw_point,get_color = None):
     text_rect.center = (draw_point)
     
     screen.blit(text_surface, text_rect)
+
+class wii:
+    def __init__(self,img_name,size,draw_point):
+        self.img_name = img_name
+        self.img = image_changer(img_name,size)
+        self.draw_point = draw_point
+        self.clear = 0
+
+    def draw(self):
+        self.img.set_alpha(self.clear)
+        front_surface.blit(self.img,self.draw_point)
+        pygame.draw.circle(middle_surface,(255,255,255),self.draw_point,self.clear + 50, 5)
+
+        if self.clear == 250:
+            for i in player_marker_list:
+                i.img_name == "blue_feet.png" or "red_feet.png":
+                push_checker(i.,entity)
+            
+
+
+
 
 
 
