@@ -20,7 +20,8 @@ screen = pygame.display.set_mode((w, h),pygame.FULLSCREEN  | pygame.SCALED | pyg
 
 #変更可
 
-fps = 100#一秒間に画面更新をする回数
+#一秒間に画面更新をする回数
+fps = 100 
 
 split_varue = 20 #円が出てくるマス目の細かさ
 
@@ -45,7 +46,7 @@ scan_count = 0
 
 
 #surfaceの設定
-difficulty_level = None
+difficulty_level = "easy"
 
 pygame.display.set_caption("デジタル体育")
 
@@ -56,7 +57,7 @@ middle_surface = pygame.Surface((w,h), pygame.SRCALPHA)
 back_surface = pygame.Surface((w,h),pygame.SRCALPHA)
 
 
-circle_time = 0
+circle_time = 1 #0にするとZeroDivisionErrorが出る
 
 check_count = 0
 
@@ -139,8 +140,10 @@ class aruco_entity:
         self.clear = 0
 
     def count_plus1(self):
+        global fps
+        global circle_time
         self.count += 1
-        self.clear -= 1
+        self.clear -= 1 #うまくいってない気がするけれどまあok! let's go
     
     def set_now_point(self, now_point):
         self.now_point = now_point
@@ -344,9 +347,12 @@ class level_entitys(menu_entity):
         self.level_seter = level_seter
         self.now_chews = False#今選択されているクラスであるかどうか。
 
+        if img_name == "moveeasy.png": #難易度の初期設定がEASYになるようにする。 関数action もしくは back_action に関係するかは行数607の()の中の一番最後の引数を参照してね！
+            self.now_chews = True
+            self.now_clear = 255
 
     def action(self):
-        self.now_clear += 5 #この値でどれくらい長押し？すればアクションが起きるかを設定できる。
+        self.now_clear += 10 #この値でどれくらい長押し？すればアクションが起きるかを設定できる。
         if self.now_clear > 255:
             self.now_clear = 255
 
@@ -404,15 +410,15 @@ class start_button_entity(menu_entity):
                 mode = self.mode_seter
 
                 if difficulty_level == "easy":
-                    circle_time = 7
-
-                if difficulty_level == "normal":
-                    circle_time = 6
-
-                if difficulty_level == "hard":
                     circle_time = 5
 
-                count_timer.reset(60)
+                if difficulty_level == "normal":
+                    circle_time = 4
+
+                if difficulty_level == "hard":
+                    circle_time = 3
+
+                count_timer.reset(10)
         
 
 
@@ -435,22 +441,22 @@ def text_draw(text,font,draw_point,get_color = None):
     
     screen.blit(text_surface, text_rect)
 
-class wii:
-    def __init__(self,img_name,size,draw_point):
-        self.img_name = img_name
-        self.img = image_changer(img_name,size)
-        self.draw_point = draw_point
-        self.clear = 0
+# class wii:
+#     def __init__(self,img_name,size,draw_point):
+#         self.img_name = img_name
+#         self.img = image_changer(img_name,size)
+#         self.draw_point = draw_point
+#         self.clear = 0
 
-    def draw(self):
-        self.img.set_alpha(self.clear)
-        front_surface.blit(self.img,self.draw_point)
-        pygame.draw.circle(middle_surface,(255,255,255),self.draw_point,self.clear + 50, 5)
+#     def draw(self):
+#         self.img.set_alpha(self.clear)
+#         front_surface.blit(self.img,self.draw_point)
+#         pygame.draw.circle(middle_surface,(255,255,255),self.draw_point,self.clear + 50, 5)
 
-        if self.clear == 250:
-            for i in player_marker_list:
-                i.img_name == "blue_feet.png" or "red_feet.png":
-                push_checker(i.,entity)
+#         if self.clear == 250:
+#             for i in player_marker_list:
+#                 i.img_name == "blue_feet.png" or "red_feet.png":
+#                 push_checker(i.,entity)
             
 
 
@@ -688,7 +694,7 @@ while running:
                 push_checker(player_chenge_point(player.now_point),i)
 
     elif mode == "play":
-        if scan_count % int(fps*circle_time) == 0:
+        if scan_count % int(fps * circle_time + 1) == 0:
             make_circle()
 
         if scan_count % fps == 0:
@@ -703,8 +709,9 @@ while running:
     elif mode == "end":
         count_result.draw()
 
-        if count_timer.count():
-            mode = "menu" 
+        if scan_count % fps == 0:
+            if count_timer.count():
+                mode = "menu" 
 
 
     for e in set_entity_list:
