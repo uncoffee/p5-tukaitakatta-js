@@ -194,23 +194,18 @@ class player_marker(aruco_entity):
                 pygame.draw.circle(front_surface, (255,255,255),player_chenge_point(self.now_point), 30)
 
         if mode == "play":
-            if self.clear > 1:
-                front_surface.blit(self.img,img_point)
-                pygame.draw.circle(middle_surface,(255,255,255,clear),self.draw_point,self.clear + 50, 5)
-
-            elif self.clear == 1:
-                x , y = self.draw_point
-                self.push_range = x-45, x+45,y-45, y+45#ここの値を後で変える。
-                push_checker(player_chenge_point(self.now_point),self)
+                
+            x , y = self.draw_point
+            self.push_range = x-45, x+45,y-45, y+45#ここの値を後で変える。
+            push_checker(player_chenge_point(self.now_point),self)
+            front_surface.blit(self.img,img_point)
 
 
     def action(self):
         random.choice(comment_list).make(self.draw_point)
         count_result.touch()
+        self.clear = 0
         #音を出す。
-
-    def back_action(self):
-        count_result.miss()
 
 
 class jump_entity:
@@ -331,7 +326,7 @@ class menu_entity:
         
 
 
-class level_entitys(menu_entity):
+class level_entitys(menu_entity):#おそらくこれは消えるだろう！
     def __init__(self,img_name,size,draw_point,push_range,level_seter,move):
         if move == True:
             defa_clear = 0 #エンティティーの初期透明度の指定　min:0 max:255
@@ -366,7 +361,8 @@ class level_entitys(menu_entity):
 
     def back_action(self):
         if not self.now_chews:
-            self.now_clear -= 5
+            # 別のモードが選択された時に消えるスピード
+            self.now_clear -= 60
             if self.now_clear < self.defa_clear:
                 self.now_clear = self.defa_clear
 
