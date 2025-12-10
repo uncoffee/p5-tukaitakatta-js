@@ -37,7 +37,7 @@ level_size = 600#難易度boxの大きさ
 
 button_size = 1000#スタートボタンの大きさ
 
-play_time = 60
+play_time = 1
 
 #変更不可
 game_point = 0
@@ -72,7 +72,7 @@ def random_position(length):
 def make_circle():
     m = random.choice(player_marker_list)
     m.draw_point = (random_position(w),random_position(h))
-    m.clear = 255
+    m.choice = True
     
 def change_x(A, B, now):
     x1, y1 = A
@@ -143,7 +143,6 @@ class aruco_entity:
         global fps
         global circle_time
         self.count += 1
-        self.clear -= 1 #うまくいってない気がするけれどまあok! let's go
     
     def set_now_point(self, now_point):
         self.now_point = now_point
@@ -178,39 +177,54 @@ class player_marker(aruco_entity):
         self.img = image_changer(img_name,size)
         draw_point = set_img_point(draw_point,size)
         self.push_range = 0,0,0,0
+        #マーカーが表示されるか否か
         self.choice = False
+        #self.clear は継承後のクラスで宣言しています(aruco_entity)
 
         super().__init__(marker_id,draw_point)
 
     def draw(self, mode):
         img_point = set_img_point(self.draw_point,self.img_size)
-        clear = 255 + self.clear #self.clear は画像の透明度合いの変化量の値。
-        self.img.set_alpha(clear)
+
+        self.img.set_alpha(self.clear)
 
         if mode == "set":
             if self.count < 5:
                 back_surface.blit(self.img,self.set_point)
+
         if mode == "menu":
             if self.marker_id == 6:#id6は赤足
                 pygame.draw.circle(front_surface, (255,255,255),player_chenge_point(self.now_point), 30)
 
         if mode == "play":
             if self.choice:
-                self.clear = 60
+                self.clear += 20
+                if self.clear > 255:
+                    self.clear = 255
                 x , y = self.draw_point
                 self.push_range = x-45, x+45,y-45, y+45#ここの値を後で変える。
-                push_checker(player_chenge_point(self.now_point),self)
-                front_surface.blit(self.img,img_point)
+                if self.clear == 255:                     
+                    push_checker(player_chenge_point(self.now_point),self)
 
             else:
-                self.clear = -60
+                self.clear -= 20
+                if self.clear < 0:
+                    self.clear = 0
+
+            front_surface.blit(self.img,img_point)
 
 
     def action(self):
         random.choice(comment_list).make(self.draw_point)
+        print(self.draw_point)
         count_result.touch()
-        self.clear = 0
+        self.choice = False
+        make_circle()
         #音を出す。
+
+    def back_action(self):
+        #文字で動きを誘導かな。(文字は写真じゃないほうがよさそう)
+        print("")
 
 
 class jump_entity:
@@ -219,13 +233,13 @@ class jump_entity:
         self.img = image_changer(img_name,img_size)
             
         self.draw_point = 0,0
-        self.clear = 255
+        self.clear = 0
         self.jump_count = 0
         self.push_count = 0
         self.push_range = 0,0,0,0
+        self.choice = False
 
     def make_jump_circle(self,draw_point):
-        self.draw_point = set_img_point(draw_point,self.img_size)
         
         #状態を初期化
         self.clear = 255
@@ -233,11 +247,29 @@ class jump_entity:
         self.push_range = img_range_changer(self.img,self.img_size)
  
     def draw(self,mode):
+        self.draw_point = set_img_point(self.draw_point,self.img_size)
+
         if mode == "set":
             if self.jump_count >= 0:
                 front_surface.blit(self.img,self.draw_point)
 
         if mode == "play":
+            if self.choice:
+                self.clear += 20
+
+            else:
+                self.clear -= 20
+
+            if self.clear > 255:
+                self.clear = 255
+
+
+            elif self.clear < 0:
+                self.clear = 0
+
+
+
+
             if self.clear >= 1:
                 round_size = 255 - self.clear#255は完全に不透明になるアルファ値
                 front_surface.blit(self.img,self.draw_point)
@@ -419,7 +451,7 @@ class start_button_entity(menu_entity):
                 if difficulty_level == "hard":
                     circle_time = 3
 
-                count_timer.reset(10)
+                count_timer.reset(play_time) #play_time はモードplayの持続時間
         
 
 
@@ -506,7 +538,7 @@ class play_result:
 
 
     def draw(self):
-        text_draw(f"score:{self.score}",pygame.font.Font(None,500),(w/2,h/4))#,64,224,208
+        text_draw(f"score:{self.score}",pygame.font.Font(None,500),(w/2,h/4))
         text_draw(f"combo:{self.combo}",pygame.font.Font(None,200),(w/20*15,h/3*2))
         text_draw(f"good:{self.get_touch}",pygame.font.Font(None,200),(w/20*3,h/5*3))
         text_draw(f"miss:{self.miss_touch}",pygame.font.Font(None,200),(w/20*3,h/5*4))
@@ -665,10 +697,10 @@ while running:
     clock.tick(fps)
 
     #描写のリセット
-    screen.fill((50,50,50))
     front_surface.fill((0,0,0,0))
     middle_surface.fill((0,0,0,0))
     back_surface.fill((0,0,0,0))
+    screen.fill((50,50,50))
 
     scan_count += 1
     scan_manager(scan_count, mode)#setmodeの時だけ妥協でカメラの画像を出力する。
@@ -694,9 +726,11 @@ while running:
             if i.move:
                 push_checker(player_chenge_point(player.now_point),i)
 
-    elif mode == "play":
-        if scan_count % int(fps * circle_time + 1) == 0:
+        if mode == "play":#mode が playになって初めの一回のみ宣言する
             make_circle()
+
+    elif mode == "play":
+        #円にふれたら新しく生成するので時間生成はなくなった
 
         if scan_count % fps == 0:
             if count_timer.count():
@@ -705,14 +739,20 @@ while running:
 
         for i in comment_list:
             i.draw()
-        
 
-    elif mode == "end":
+        if mode == "end":#mode が endになって初めの一回のみ宣言する
+            fps = 1#ラグ回避のためにfpsを一時的に下げる
+
+    elif mode == "end": 
+
         count_result.draw()
-
         if scan_count % fps == 0:
             if count_timer.count():
                 mode = "menu" 
+        
+        if mode == "menu":#mode が menuになって初めの一回のみ宣言する
+            fps = 100#デフォルトのfps 100
+
 
 
     for e in set_entity_list:
