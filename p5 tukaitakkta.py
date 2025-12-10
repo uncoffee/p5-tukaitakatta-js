@@ -178,12 +178,13 @@ class player_marker(aruco_entity):
         self.img = image_changer(img_name,size)
         draw_point = set_img_point(draw_point,size)
         self.push_range = 0,0,0,0
+        self.choice = False
 
         super().__init__(marker_id,draw_point)
 
     def draw(self, mode):
         img_point = set_img_point(self.draw_point,self.img_size)
-        clear = 255 - self.clear
+        clear = 255 + self.clear #self.clear は画像の透明度合いの変化量の値。
         self.img.set_alpha(clear)
 
         if mode == "set":
@@ -194,11 +195,15 @@ class player_marker(aruco_entity):
                 pygame.draw.circle(front_surface, (255,255,255),player_chenge_point(self.now_point), 30)
 
         if mode == "play":
-                
-            x , y = self.draw_point
-            self.push_range = x-45, x+45,y-45, y+45#ここの値を後で変える。
-            push_checker(player_chenge_point(self.now_point),self)
-            front_surface.blit(self.img,img_point)
+            if self.choice:
+                self.clear = 60
+                x , y = self.draw_point
+                self.push_range = x-45, x+45,y-45, y+45#ここの値を後で変える。
+                push_checker(player_chenge_point(self.now_point),self)
+                front_surface.blit(self.img,img_point)
+
+            else:
+                self.clear = -60
 
 
     def action(self):
