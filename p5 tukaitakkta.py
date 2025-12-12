@@ -1,10 +1,12 @@
 #"C:/Program Files/Python311/python.exe" pythonのインストール先
 #pip install 打ち込むの忘れずにね！
 
+
 #pip要る
-import pygame
+import pygame 
 import cv2 #pip install opencv-python モジュ:pip install opencv-contrib-python
 import hid #pip install hidapi
+import math
 
 #pipいらない
 import numpy
@@ -227,10 +229,12 @@ class player_marker(aruco_entity):
         print("")
 
 
-class jump_entity:
-    def __init__(self,img_name,img_size):#5枚セットだから変数img_name_listはリスト型。
+class wii_entity:
+    def __init__(self,img_name,img_size,setvalue):
         self.img_size = img_size
         self.img = image_changer(img_name,img_size)
+        #このsetvalueにはwii認識のIDとデータ要求の値をいれる。
+        self.setvalue = setvalue
             
         self.draw_point = 0,0
         self.clear = 0
@@ -239,9 +243,28 @@ class jump_entity:
         self.push_range = 0,0,0,0
         self.choice = False
 
+    def connection(self):
+        # 接続確認のため、デバイスを列挙します AI生成なのでコメントは後で消す
+        devices = hid.enumerate(self.setvalue)#一応残しとく
+        if not devices:
+            return
+
+    try:
+        # 1. デバイスのオープン
+        path = devices[0]['path']
+        device = hid.device()
+        device.open_path(path)
+        
+        print("接続成功！")
+        print(f" 製品名: {device.get_product_string()}")
+        print(f" メーカー名: {device.get_manufacturer_string()}")
+        
+
+        
+
     def make_jump_circle(self,draw_point):
         
-        #状態を初期化
+        #状態を初期化 必要ないかも
         self.clear = 255
         self.push_count = 0
         self.push_range = img_range_changer(self.img,self.img_size)
@@ -474,28 +497,6 @@ def text_draw(text,font,draw_point,get_color = None):
     
     screen.blit(text_surface, text_rect)
 
-# class wii:
-#     def __init__(self,img_name,size,draw_point):
-#         self.img_name = img_name
-#         self.img = image_changer(img_name,size)
-#         self.draw_point = draw_point
-#         self.clear = 0
-
-#     def draw(self):
-#         self.img.set_alpha(self.clear)
-#         front_surface.blit(self.img,self.draw_point)
-#         pygame.draw.circle(middle_surface,(255,255,255),self.draw_point,self.clear + 50, 5)
-
-#         if self.clear == 250:
-#             for i in player_marker_list:
-#                 i.img_name == "blue_feet.png" or "red_feet.png":
-#                 push_checker(i.,entity)
-            
-
-
-
-
-
 
 class counter:
     def __init__(self):
@@ -656,6 +657,18 @@ back_entity_list = [
 ]
 
 menu_entity_list = back_entity_list + level_entity_list + start_button_list #メニューモードで使うリスト
+
+# wiiリモコンの認識番号(ID)を設定する
+TARGET_VID = 0x057e
+TARGET_PID = 0x0306
+
+# Wiiリモコンから欲しいデータを要求するための値
+REPORT_MODE_ACCEL = 0x31
+HID_OUTPUT_REPORT_ID = 0x12
+
+jump_entity_list = [#ingsizeは後で要調整　イメージはgoogle スライド参照
+    wii_entity("jump.png","要調整",[[TARGET_VID,TARGET_PID],[REPORT_MODE_ACCEL,HID_OUTPUT_REPORT_ID]])
+]
 
 
 count_timer = counter()

@@ -39,7 +39,7 @@ def calculate_accelerometer(report):
     # レポートが短い、またはレポートIDが一致しない場合は処理しない
     # 実際には、レポートID 0x31 のレポートの長さは 6 バイトですが、
     # OSやBluetoothスタックによっては、より長いレポートとして送られてくることがあるため、len(report)のチェックを緩めます。
-    if not report or report[0] != REPORT_MODE_ACCEL or len(report) < 6:
+    if report or report[0] == REPORT_MODE_ACCEL or len(report) >= 6:
         return None
 
     # ボタンデータ (上位2ビットが加速度の上位ビットを含む)
