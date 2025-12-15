@@ -166,7 +166,6 @@ def communicate_with_wiimote(vid, pid):
                         # 状態遷移によるジャンプ判定 (誤判定防止のため)
                         new_state = jump_state
                         if jump_state == "IDLE" and raw_y >= 680:
-                            # 待機中 -> 高いピークを検出 -> 踏み切り状態へ
                             new_state = "TAKEOFF"
                             jump_g = raw_y
 

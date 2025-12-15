@@ -229,6 +229,14 @@ class player_marker(aruco_entity):
         print("")
 
 
+def data(report): #通常の値が高いのに下位2ビット気にしたところで変わらんので省略　※詳しくはwii.pyのcalculate_accelerometer関数を参照
+    if report or report[0] == REPORT_MODE_ACCEL or len(report) >= 6:
+        return None
+
+
+    return (report[3] << 2), (report[4] << 2), (report[5] << 2)
+
+
 class wii_entity:
     def __init__(self,img_name,img_size,setvalue):
         self.img_size = img_size
@@ -240,34 +248,30 @@ class wii_entity:
         self.clear = 0
         self.jump_count = 0
         self.push_count = 0
-        self.push_range = 0,0,0,0
+        self.push_range = 0,0,w,h #全画面
         self.choice = False
 
     def connection(self):
         # 接続確認のため、デバイスを列挙します AI生成なのでコメントは後で消す
-        devices = hid.enumerate(self.setvalue)#一応残しとく
+        devices = hid.enumerate(self.setvalue[0])#一応残しとく
         if not devices:
-            return
+            return None
 
-    try:
+        try:
         # 1. デバイスのオープン
-        path = devices[0]['path']
-        device = hid.device()
-        device.open_path(path)
-        
-        print("接続成功！")
-        print(f" 製品名: {device.get_product_string()}")
-        print(f" メーカー名: {device.get_manufacturer_string()}")
-        
+            path = devices[0]['path']
+            device = hid.device()
+            device.open_path(path)
+            
+            print("接続成功！")
+            print(f" 製品名: {device.get_product_string()}")
+            print(f" メーカー名: {device.get_manufacturer_string()}")
 
-        
+            device.set_nonblocking(True)
 
-    def make_jump_circle(self,draw_point):
-        
-        #状態を初期化 必要ないかも
-        self.clear = 255
-        self.push_count = 0
-        self.push_range = img_range_changer(self.img,self.img_size)
+        except:
+            print("うまくいってないみたい。")
+            
  
     def draw(self,mode):
         self.draw_point = set_img_point(self.draw_point,self.img_size)
@@ -289,6 +293,36 @@ class wii_entity:
 
             elif self.clear < 0:
                 self.clear = 0
+
+    def action(self):
+                        # レポートID 0x31 は 6 バイトですが、常に最大長で読み込みます。
+            report = device.read(22) 
+            
+            if report:
+                report_id = report[0]
+                
+                # ユーザーが求めている0x31レポート（加速度センサーデータ）かどうかをチェック
+                if report_id == REPORT_MODE_ACCEL:
+                    if report or report[0] == REPORT_MODE_ACCEL or len(report) >= 6:
+        return None
+
+
+    return (report[3] << 2), (report[4] << 2), (report[5] << 2)
+                    accel_data = calculate_accelerometer(report)
+                    
+                    if accel_data:
+                        raw_x, raw_y, raw_z = accel_data
+
+                        magnitude = calculate_jump_magnitude(
+                            raw_x, raw_y, raw_z, 
+                            zero_g=ZERO_G_CALIBRATION, 
+                            one_g_sensitivity=ONE_G_SENSITIVITY
+                        )
+                        
+                        if raw_y >= 680:
+                    
+    
+            
 
 
 
@@ -667,7 +701,7 @@ REPORT_MODE_ACCEL = 0x31
 HID_OUTPUT_REPORT_ID = 0x12
 
 jump_entity_list = [#ingsizeは後で要調整　イメージはgoogle スライド参照
-    wii_entity("jump.png","要調整",[[TARGET_VID,TARGET_PID],[REPORT_MODE_ACCEL,HID_OUTPUT_REPORT_ID]])
+    wii_entity("jump.png","要調整",[(TARGET_VID,TARGET_PID),[REPORT_MODE_ACCEL,HID_OUTPUT_REPORT_ID]])
 ]
 
 
