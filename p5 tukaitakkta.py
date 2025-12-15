@@ -106,21 +106,27 @@ def player_chenge_point(player):
         return pygame.mouse.get_pos()
         
 
-    left_x = change_x(left_top,left_bottom,player)
-    right_x = change_x(right_top,right_bottom,player)
+    # left_x = change_x(left_top,left_bottom,player)
+    # right_x = change_x(right_top,right_bottom,player)
 
-    mouse_x = int(w * 0.8 * (player[0] - left_x) / (right_x - left_x) + w * 0.1)
+    # mouse_x = int(w * 0.8 * (player[0] - left_x) / (right_x - left_x) + w * 0.1)
 
-    #print(f"横 :{left_x,player[0],right_x, mouse_x}")
+    # #print(f"横 :{left_x,player[0],right_x, mouse_x}")
 
-    top_y = change_y(left_top,right_top,player)
-    bottom_y = change_y(left_bottom,right_bottom,player)
+    # top_y = change_y(left_top,right_top,player)
+    # bottom_y = change_y(left_bottom,right_bottom,player)
 
-    mouse_y = int(h * 0.8 * (player[1] -  top_y) / (bottom_y - top_y) + h * 0.1)
+    # mouse_y = int(h * 0.8 * (player[1] -  top_y) / (bottom_y - top_y) + h * 0.1) #多分なんかやらかしてる。ああああああああああああああああああああああああああああああああああああああああ
 
-    #print(f"縦 :{top_y,player[1],bottom_y, mouse_y}")
+    # #print(f"縦 :{top_y,player[1],bottom_y, mouse_y}")
 
-    return mouse_x , mouse_y
+    # return mouse_x , mouse_y
+
+def random_choice(entitys):
+    if type(entitys) == list:
+        random.choice(entitys)
+
+    return
 
 
 def image_changer(img_name,size):
@@ -251,26 +257,15 @@ class wii_entity:
         self.push_range = 0,0,w,h #全画面
         self.choice = False
 
-    def connection(self):
-        # 接続確認のため、デバイスを列挙します AI生成なのでコメントは後で消す
-        devices = hid.enumerate(self.setvalue[0])#一応残しとく
-        if not devices:
-            return None
-
-        try:
-        # 1. デバイスのオープン
-            path = devices[0]['path']
+        devices = hid.enumerate(self.setvalue[0])
+        if devices:
             device = hid.device()
-            device.open_path(path)
-            
-            print("接続成功！")
-            print(f" 製品名: {device.get_product_string()}")
-            print(f" メーカー名: {device.get_manufacturer_string()}")
+            device.open_path(devices[0]['path'])
 
-            device.set_nonblocking(True)
+        else:
+            print("wiiが見つからないよ")
 
-        except:
-            print("うまくいってないみたい。")
+        self.device = device
             
  
     def draw(self,mode):
@@ -289,80 +284,25 @@ class wii_entity:
 
             if self.clear > 255:
                 self.clear = 255
-
+                push_checker()
 
             elif self.clear < 0:
                 self.clear = 0
 
+            else:
+                self.device.set_nonblocking(True)
+
     def action(self):
                         # レポートID 0x31 は 6 バイトですが、常に最大長で読み込みます。
-            report = device.read(22) 
-            
-            if report:
-                report_id = report[0]
+            report = self.device.read(22) 
                 
-                # ユーザーが求めている0x31レポート（加速度センサーデータ）かどうかをチェック
-                if report_id == REPORT_MODE_ACCEL:
-                    if report or report[0] == REPORT_MODE_ACCEL or len(report) >= 6:
-        return None
+                # reportのなかにあるデータが加速度に関するものかどうかを確かめてる
+            if not report[0] == REPORT_MODE_ACCEL or len(report) >= 6:
 
-
-    return (report[3] << 2), (report[4] << 2), (report[5] << 2)
-                    accel_data = calculate_accelerometer(report)
-                    
-                    if accel_data:
-                        raw_x, raw_y, raw_z = accel_data
-
-                        magnitude = calculate_jump_magnitude(
-                            raw_x, raw_y, raw_z, 
-                            zero_g=ZERO_G_CALIBRATION, 
-                            one_g_sensitivity=ONE_G_SENSITIVITY
-                        )
-                        
-                        if raw_y >= 680:
-                    
-    
-            
-
-
-
-
-            if self.clear >= 1:
-                round_size = 255 - self.clear#255は完全に不透明になるアルファ値
-                front_surface.blit(self.img,self.draw_point)
-                pygame.draw.circle(middle_surface,(255,255,255,self.clear),self.draw_point, round_size + 30, 5)
-
-        self.jump_count -= 1
-        self.clear -= 1
-        if self.clear < 0:
-            self.clear = 0
-
-    def check(self):
-        if self.clear == 30:
-            for i in player_marker_list:
-                if i.img_name == "red_feet.png":
-                    red_feet = i.now_point
-
-                if i.img_name == "blue_feet.png":
-                    blue_feet = i.now_point
-
-            push_checker(player_chenge_point(red_feet),self)
-            push_checker(player_chenge_point(blue_feet),self)
-
-        if self.push == 2:
-            if 0 < self.clear <= 20:
-                if self.jump_count > 0:
-                    self.clear = 0
-                    count_result.jump()
-                    random.choice(comment_list).make(self.draw_point)
-                    
-    def action(self):
-        self.push_count += 1
-
-    def back_action(self):
-        self.push_count = 0
-        
-
+                raw_y = report[4] << 2
+                
+                if raw_y >= 680:
+                    self.device.set_nonblocking(False)
 
         
 def img_range_changer(size):
@@ -648,6 +588,8 @@ def menu_manager(cursor):
             back_surface.blit(i.img, (draw_x , draw_y))
 
 
+
+
 comment_list = [
     coment_text("good.png"),
 ]
@@ -777,6 +719,7 @@ while running:
             make_circle()
 
     elif mode == "play":
+        random_choice(play_entitys)
         #円にふれたら新しく生成するので時間生成はなくなった
 
         if scan_count % fps == 0:

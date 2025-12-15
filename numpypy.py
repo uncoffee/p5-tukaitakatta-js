@@ -13,4 +13,9 @@ print(f"xのズレ:{-90 * magnification} , yのズレ{-50 * magnification}")
 print(954 - 1294)
 print(717 - 921)
 
+li = []
+
+if type(li) == list:
+    print("成功")
+
 
