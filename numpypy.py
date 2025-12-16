@@ -18,4 +18,7 @@ li = []
 if type(li) == list:
     print("成功")
 
+while True:
+    print("a")
+
 

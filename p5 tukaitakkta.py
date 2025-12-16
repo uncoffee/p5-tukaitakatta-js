@@ -121,10 +121,12 @@ def player_chenge_point(player):
     # #print(f"縦 :{top_y,player[1],bottom_y, mouse_y}")
 
     # return mouse_x , mouse_y
+    
 
 def random_choice(entitys):
     if type(entitys) == list:
-        random.choice(entitys)
+        entity = random.choice(entitys)
+        entity.choice = True
 
     return
 
@@ -235,14 +237,6 @@ class player_marker(aruco_entity): #画像データと座標データ分ける�
         print("")
 
 
-def data(report): #通常の値が高いのに下位2ビット気にしたところで変わらんので省略　※詳しくはwii.pyのcalculate_accelerometer関数を参照
-    if report or report[0] == REPORT_MODE_ACCEL or len(report) >= 6:
-        return None
-
-
-    return (report[3] << 2), (report[4] << 2), (report[5] << 2)
-
-
 class wii_entity:
     def __init__(self,img_name,img_size,setvalue):
         self.img_size = img_size
@@ -255,7 +249,7 @@ class wii_entity:
         self.jump_count = 0
         self.push_count = 0
         self.push_range = 0,0,w,h #全画面
-        self.choice = False
+        self.choice = True
 
         devices = hid.enumerate(self.setvalue[0])
         if devices:
@@ -291,30 +285,19 @@ class wii_entity:
                     # reportのなかにあるデータが加速度に関するものかどうかを確かめてる
                 if not report[0] == REPORT_MODE_ACCEL or len(report) >= 6:
 
-                    raw_y = report[4] << 2
+                    raw_y = report[4] << 2 #通常の値が高いのに下位2ビット()気にしたところで変わらんので省略　※詳しくはwii.pyのcalculate_accelerometer関数を参照
                     
                     if raw_y >= 680:
                         self.device.set_nonblocking(False)
                         self.choice = False
-
+                        random_choice(play_entitys)
 
             elif self.clear < 0:
                 self.clear = 0
 
             else:
-                self.device.set_nonblocking(True)
-
-    def action(self):
-                        # レポートID 0x31 は 6 バイトですが、常に最大長で読み込みます。
-            report = self.device.read(22) 
-                
-                # reportのなかにあるデータが加速度に関するものかどうかを確かめてる
-            if not report[0] == REPORT_MODE_ACCEL or len(report) >= 6:
-
-                raw_y = report[4] << 2
-                
-                if raw_y >= 680:
-                    self.device.set_nonblocking(False)
+                if self.choice:
+                    self.device.set_nonblocking(True)
 
         
 def img_range_changer(size):
@@ -659,8 +642,10 @@ REPORT_MODE_ACCEL = 0x31
 HID_OUTPUT_REPORT_ID = 0x12
 
 jump_entity_list = [#ingsizeは後で要調整　イメージはgoogle スライド参照
-    wii_entity("jump.png","要調整",[(TARGET_VID,TARGET_PID),[REPORT_MODE_ACCEL,HID_OUTPUT_REPORT_ID]])
+    wii_entity("jump.png",1000,[(TARGET_VID,TARGET_PID),[REPORT_MODE_ACCEL,HID_OUTPUT_REPORT_ID]])
 ]
+
+play_entitys = jump_entity_list + player_marker_list
 
 
 count_timer = counter()
