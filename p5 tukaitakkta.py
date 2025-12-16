@@ -179,7 +179,7 @@ class edge_marker(aruco_entity):
                 pygame.draw.circle(back_surface, (255,0,0),(self.set_point), 30)
 
 
-class player_marker(aruco_entity):
+class player_marker(aruco_entity): #画像データと座標データ分ける？
     def __init__(self,marker_id,img_name,size,draw_point):
         self.img_size = 180
         self.img = image_changer(img_name,size)
@@ -264,6 +264,7 @@ class wii_entity:
 
         else:
             print("wiiが見つからないよ")
+            #ダメだったらエラー吐かせて落とすなり専用画面に誘導なりしたい。
 
         self.device = device
             
@@ -284,7 +285,18 @@ class wii_entity:
 
             if self.clear > 255:
                 self.clear = 255
-                push_checker()
+                
+                report = self.device.read(22) 
+                    
+                    # reportのなかにあるデータが加速度に関するものかどうかを確かめてる
+                if not report[0] == REPORT_MODE_ACCEL or len(report) >= 6:
+
+                    raw_y = report[4] << 2
+                    
+                    if raw_y >= 680:
+                        self.device.set_nonblocking(False)
+                        self.choice = False
+
 
             elif self.clear < 0:
                 self.clear = 0
@@ -500,23 +512,23 @@ class play_result:
         self.score = 0
 
     def touch(self):
-        self.get_touch += 1
+        self.get_touch += 100
         self.combo += 1
-        self.score += int(self.combo / 10 + 1) * 100
-
-    def miss(self):
-        self.combo = 0
-        self.miss_touch += 1
 
     def jump(self):
-        self.score += 400
-
+        self.score += 300
+        self.combo += 1
 
     def draw(self):
-        text_draw(f"score:{self.score}",pygame.font.Font(None,500),(w/2,h/4))
-        text_draw(f"combo:{self.combo}",pygame.font.Font(None,200),(w/20*15,h/3*2))
-        text_draw(f"good:{self.get_touch}",pygame.font.Font(None,200),(w/20*3,h/5*3))
-        text_draw(f"miss:{self.miss_touch}",pygame.font.Font(None,200),(w/20*3,h/5*4))
+        co = self.combo / 10
+        score = self.score * co
+
+        result_text = random.choice(result_texts)
+
+        text_draw(f"{result_text}",pygame.font.Font(None,500),(w/2,h/4))
+        text_draw(f"がんばりぽいんと:{score}",pygame.font.Font(None,200),(w/20*15,h/3*2))
+        # text_draw(f"good:{self.get_touch}",pygame.font.Font(None,200),(w/20*3,h/5*3))
+        # text_draw(f"miss:{self.miss_touch}",pygame.font.Font(None,200),(w/20*3,h/5*4))
 
 
 def push_checker(cursor,entity):
@@ -610,7 +622,7 @@ player_marker_list = [
     player_marker(8,"red_hand.png",circle_size,[(w * 4 // 9) - 90,(h * 2 // 9) - 50])
 ]
 
-set_entity_list = edge_marker_list + player_marker_list #セットモードで使うリスト+座標設定にも使ってる。
+set_entity_list = edge_marker_list + player_marker_list #セットモードで使うリスト+座標設定にも使ってる。 mode = "play" でもたたいてる
 
 
 
@@ -630,6 +642,10 @@ start_button_list = [
 
 back_entity_list = [
     back_entity("level_frame.png",level_frame_size,((w / 2) - 900,(h / 2) - 500))
+]
+
+result_texts = [
+    "よくがんばりました！","はなまる！","がんばれたね！","おめでとう！","めいっぱいがんばったね！","すごい！",
 ]
 
 menu_entity_list = back_entity_list + level_entity_list + start_button_list #メニューモードで使うリスト
