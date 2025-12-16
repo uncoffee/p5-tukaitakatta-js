@@ -39,7 +39,7 @@ def calculate_accelerometer(report):
     # レポートが短い、またはレポートIDが一致しない場合は処理しない
     # 実際には、レポートID 0x31 のレポートの長さは 6 バイトですが、
     # OSやBluetoothスタックによっては、より長いレポートとして送られてくることがあるため、len(report)のチェックを緩めます。
-    if report or report[0] == REPORT_MODE_ACCEL or len(report) >= 6:
+    if not report or report[0] != REPORT_MODE_ACCEL or len(report) < 6:
         return None
 
     # ボタンデータ (上位2ビットが加速度の上位ビットを含む)
@@ -154,7 +154,7 @@ def communicate_with_wiimote(vid, pid):
                     
                     if accel_data:
                         raw_x, raw_y, raw_z = accel_data
-                        # print(raw_x, raw_y, raw_z)
+                        print(raw_x, raw_y, raw_z)
                         
                         # 加速度の合計の大きさを計算
                         magnitude = calculate_jump_magnitude(
@@ -166,6 +166,7 @@ def communicate_with_wiimote(vid, pid):
                         # 状態遷移によるジャンプ判定 (誤判定防止のため)
                         new_state = jump_state
                         if jump_state == "IDLE" and raw_y >= 680:
+                            # 待機中 -> 高いピークを検出 -> 踏み切り状態へ
                             new_state = "TAKEOFF"
                             jump_g = raw_y
 

@@ -39,7 +39,7 @@ level_size = 600#難易度boxの大きさ
 
 button_size = 1000#スタートボタンの大きさ
 
-play_time = 1
+play_time = 60
 
 #変更不可
 game_point = 0
@@ -122,11 +122,15 @@ def player_chenge_point(player):
 
     # return mouse_x , mouse_y
     
+choice_log = ""
 
 def random_choice(entitys):
-    if type(entitys) == list:
-        entity = random.choice(entitys)
-        entity.choice = True
+    global choice_log
+    while True:
+        if type(entitys) == list:
+            entity = random.choice(entitys)
+            if not choice_log == entity:
+            entity.choice = True
 
     return
 
@@ -229,7 +233,7 @@ class player_marker(aruco_entity): #画像データと座標データ分ける�
         print(self.draw_point)
         count_result.touch()
         self.choice = False
-        make_circle()
+        random_choice(play_entitys)
         #音を出す。
 
     def back_action(self):
@@ -251,17 +255,21 @@ class wii_entity:
         self.push_range = 0,0,w,h #全画面
         self.choice = True
 
-        devices = hid.enumerate(self.setvalue[0])
-        if devices:
-            device = hid.device()
-            device.open_path(devices[0]['path'])
+        try:
+            devices = hid.enumerate(0x057e,0x0306) #このなぞのintはデバイス(wii)識別IDです。
+            if devices:
+                path = devices[0]['path']
+                device = hid.device()
+                device.open_path(path)
 
-        else:
-            print("wiiが見つからないよ")
-            #ダメだったらエラー吐かせて落とすなり専用画面に誘導なりしたい。
+            else:
+                print("wiiが見つからないよ")
+                #ダメだったらエラー吐かせて落とすなり専用画面に誘導なりしたい。
+        
+        except:
+            print("デバイスがみつからねえ")
 
         self.device = device
-            
  
     def draw(self,mode):
         self.draw_point = set_img_point(self.draw_point,self.img_size)
@@ -287,7 +295,7 @@ class wii_entity:
 
                     raw_y = report[4] << 2 #通常の値が高いのに下位2ビット()気にしたところで変わらんので省略　※詳しくはwii.pyのcalculate_accelerometer関数を参照
                     
-                    if raw_y >= 680:
+                    if raw_y >= 600:
                         self.device.set_nonblocking(False)
                         self.choice = False
                         random_choice(play_entitys)
@@ -720,7 +728,6 @@ while running:
             make_circle()
 
     elif mode == "play":
-        random_choice(play_entitys)
         #円にふれたら新しく生成するので時間生成はなくなった
 
         if scan_count % fps == 0:
